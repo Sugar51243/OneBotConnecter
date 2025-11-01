@@ -9,7 +9,7 @@
 项目本身仅包括两个文件，OneBot.py及MessageType.py。<br>
 OneBot负责服务器的直接连接及信息的IO处理。<br>
 MessageType负责信息发送的数据包构造。<br>
-换而言之，需要 查询/修改 对服务器直接交互或信息收集行为的情况下，请直接查询或修改 [OneBot.py](https://github.com/Sugar51243/OneBotConnecter/blob/main/OneBotConnecter/OneBot.py)。需要 查询/修改 向服务器发送的数据包内容或格式，请直接查询或修改 [MessageType.py](https://github.com/Sugar51243/OneBotConnecter/blob/main/OneBotConnecter/MessageType.py)。
+换而言之，需要 查询/修改 对服务器直接交互或信息收集行为的情况下，请直接查询或修改 [OneBot.py](https://github.com/Sugar51243/OneBotConnecter/blob/main/src/OneBotConnecter/OneBot.py)。需要 查询/修改 向服务器发送的数据包内容或格式，请直接查询或修改 [MessageType.py](https://github.com/Sugar51243/OneBotConnecter/blob/main/src/OneBotConnecter/MessageType.py)。
 
 ## 使用教程
 本项目基于python异步运行，请确保asyncio库已被引入。<br>
@@ -17,7 +17,7 @@ MessageType负责信息发送的数据包构造。<br>
 1.构造收集到信息时需要运行的脚本函数，填入参数为(机器人本体bot, 信息数据包message)<br>
 2.通过本库创建OneBot对象并填入机器人基本信息，填入参数为(服务器地址, 管理员id, 机器人别称)<br>
 3.运行对象的run函数，并填入1步骤的脚本函数为参数，开始连接并监听服务器推送<br>
-具体可参考本项目的[example文件](https://github.com/Sugar51243/OneBotConnecter/blob/main/examples/test.py)，个人认为已经写得很清楚了。
+具体可参考本项目的[example文件](https://github.com/Sugar51243/OneBotConnecter/blob/main/test/main.py)，个人认为已经写得很清楚了。
 
 ## 安装
-`pip install git+https://github.com/sugar51243/OneBotConnecter.git`
+`pip install OneBotConnecter==0.1.1`
