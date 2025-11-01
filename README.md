@@ -20,4 +20,4 @@ MessageType负责信息发送的数据包构造。<br>
 具体可参考本项目的[example文件](https://github.com/Sugar51243/OneBotConnecter/blob/main/test/main.py)，个人认为已经写得很清楚了。
 
 ## 安装
-`pip install OneBotConnecter==0.1.1`
+`pip install OneBotConnecter`
