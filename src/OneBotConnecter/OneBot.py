@@ -31,7 +31,7 @@ class OneBot:
     #构造体
     def __init__(self, uri: str, owner: list[str] = None, botName: list[str] = None, localtion: str = None, testMode = False):
         self._uri = uri
-        if owner != None
+        if owner != None:
             print("[W]: Owner input is None")
             self.owner = owner
         if botName != None:
