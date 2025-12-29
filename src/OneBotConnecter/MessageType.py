@@ -16,6 +16,8 @@ class TextMessage(Message):
     text = ""
 
     def __init__(self, data: str):
+        if len(data) > 500:
+            raise ValueError("内容过长")
         self.text = data
     
     def to_dict(self):
