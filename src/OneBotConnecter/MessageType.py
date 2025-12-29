@@ -308,7 +308,7 @@ class MessageChain(Message):
     
     data: list[dict]
 
-    def __init__(self, data: list[Message|str]):
+    def __init__(self, data: list[Message|str] = []):
         temp = []
         for msg in data:
             if type(msg) == str:
@@ -318,6 +318,8 @@ class MessageChain(Message):
         self.data = temp
 
     def add(self, message):
+        if type(message) == str:
+            message = TextMessage(message)
         self.data.extend(message.returnData())
     
     def to_dict(self):
