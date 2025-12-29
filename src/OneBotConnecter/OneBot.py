@@ -1,70 +1,94 @@
-try:
-    from OneBotConnecter.MessageType import Message, ReplyMessage, AtMessage, MessageChain
-except:
-    print("File [OneBotMessageType.py] missing")
-    raise Exception()
+import asyncio, json, websockets, os
+from src.OneBot.OneBotMessageType import Message, ReplyMessage, AtMessage, MessageChain
 from typing import Literal
-import os
-moduleList = ["traceback", "asyncio", "json", "websockets"]
-for module in moduleList:
-    try:
-        exec(f"import {module}")
-    except:
-        os.system("pip install " + module)
-        exec(f"import {module}")
-
-def _on_message(bot, message):
-    print(message)
+import traceback
 
 #机器人接口连接
 class OneBot:
     _uri: str = None #机器人地址
     bot = None #连接本体
     owner: list[str] = None #机器人管理员
-    botName: list[str] = [] #机器人名称
-    nickname: str = None
+    botName: list[str] = None #机器人名称
+    localtion: str = None #机器人地址
+    nickname: str = []
     botAcc: int = None
     testMode = False #调试模式
     #构造体
-    def __init__(self, uri: str, owner: list[str] = [], botName: list[str] = []):
+    def __init__(self, uri: str, owner: list[str] = None, botName: list[str] = None, localtion: str = None, testMode = False):
         self._uri = uri
-        self.owner = owner
-        self.botName = botName
+        if owner != None
+            print("[W]: Owner input is None")
+            self.owner = owner
+        if botName != None:
+            print("[W]: Bot Name input is None")
+            self.botName = botName
+        if localtion != None:
+            print("[W]: Main file location input is None")
+            self.localtion = localtion.replace("\\", "/")
+        self.testMode = testMode
     #建立连接 (WS正向)
-    async def run(self, on_message: __module__ = _on_message, sleep_time: int = 1):
-        async with websockets.connect(self._uri) as websocket:
-            self.bot = websocket
+    async def run(self, on_message: __module__):
+        while self.bot == None:
+            try:
+                self.bot = await websockets.connect(self._uri)
+            except:
+                await asyncio.sleep(1)
+        if self.bot != None:
+            self.bot = await websockets.connect(self._uri)
             message = await self.bot.recv()
             print(f"\n地址{self._uri}连接已完成")
             await self.get_login_info()
             print(f"机器人账号: {self.botAcc}")
-            print(f"机器人管理员: {self.owner}")
             print(f"机器人名称: {self.botName}")
+            if self.owner != None:
+                print(f"机器人管理员: {self.owner}")
+            if self.localtion != None:
+                print(f"机器人根目录地址: {self.localtion}")
             print(f"开始监听机器人信息推送\n")
             while True:
-                task = asyncio.create_task(self._receive_messages(on_message))
-                try:
-                    result = task.result()
-                except Exception:
-                    if self.testMode: traceback.print_exc()
-                await asyncio.sleep(sleep_time)
+                if self.bot == None:
+                    try:
+                        self.bot = await websockets.connect(self._uri)
+                    except:
+                        print("连接失败，5秒后重试\n")
+                        await asyncio.sleep(5)
+                if self.bot != None:
+                    task = asyncio.create_task(self._receive_messages(on_message))
+                    await asyncio.sleep(1)
+                    try:
+                        result = task.result()
+                    except Exception as e:
+                        if self.testMode: print(e)
+
     #收到信息时
     async def _receive_messages(self, callback: __module__):
         try:
             message = await self.bot.recv()
             message = json.loads(message)
-            if message["meta_event_type"] == "lifecycle" and message["sub_type"] != "connect":
-                print("机器人账号已掉线")
-            elif message["meta_event_type"] == "heartbeat" and message["status"]["online"] != True:
-                print("机器人账号已掉线")
-        except: pass
+            try:
+                if message["post_type"] != "meta_event" and self.bot != None:
+                    try:
+                        await callback(self, message)
+                    except Exception as e:
+                        traceback.print_exc()
+            except:
+                print(f"{message}\n")
+        except websockets.exceptions.ConnectionClosed:
+            print("与机器人连接已断开\n")
+            self.bot = None
+        except: 
+            pass
+    #
+    async def _temp_receive_messages(self):
         try:
-            if message["post_type"] != "meta_event" and self.bot != None:
-                try:
-                    await callback(self, message)
-                except Exception as e: 
-                    traceback.print_exc()
-        except: print(message)
+            message = await self.bot.recv()
+            message = json.loads(message)
+            return message
+        except websockets.exceptions.ConnectionClosed:
+            print("与机器人连接已断开\n")
+            self.bot = None
+        except: 
+            pass
     #为信息发送构造数据包
     def _createDataPack(self, action: str, params: dict):
         data = {
@@ -84,7 +108,7 @@ class OneBot:
             return message
         except: return None
     #调试模式开关
-    def test(self, testMode: bool = False):
+    async def test(testMode: bool = False):
         self.testMode = testMode
     # =====------API------===== #
     # ------好友----- #
@@ -708,7 +732,8 @@ class OneBot:
     #
     #获取登录号信息
     async def get_login_info(self):
-        callback = await self._sendToServer("get_login_info", {})
+        params = {}
+        callback = await self._sendToServer("get_login_info", params)
         self.botAcc = callback["data"]["user_id"]
         self.nickname = callback["data"]["nickname"]
         self.botName.append(self.nickname)
