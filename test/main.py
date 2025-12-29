@@ -33,6 +33,6 @@ if __name__ == "__main__":
     bot = OneBot(uri="ws://127.0.0.1:3001", owner=[], botName=[])
     #开启调试模式
     #注意调试模式会尝试于后台打印所有向服务器的收发信息，平时建議关闭
-    bot.test(True)
+    await bot.test(True)
     #通过WS连接对象，并开始监听信息推送
     asyncio.run(bot.run(on_message=onMessage))
