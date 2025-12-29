@@ -14,6 +14,10 @@ for module in moduleList:
         os.system("pip install " + module)
         exec(f"import {module}")
 
+#bedug function for None input
+def _on_message(bot, message):
+    print(message)
+
 #机器人接口连接
 class OneBot:
     _uri: str = None #机器人地址
@@ -38,7 +42,7 @@ class OneBot:
             self.localtion = localtion.replace("\\", "/")
         self.testMode = testMode
     #建立连接 (WS正向)
-    async def run(self, on_message: __module__):
+    async def run(self, on_message: __module__ = _on_message, sleep_time: int = 1):
         while self.bot == None:
             try:
                 self.bot = await websockets.connect(self._uri)
@@ -65,11 +69,11 @@ class OneBot:
                         await asyncio.sleep(5)
                 if self.bot != None:
                     task = asyncio.create_task(self._receive_messages(on_message))
-                    await asyncio.sleep(1)
                     try:
                         result = task.result()
-                    except Exception as e:
-                        if self.testMode: print(e)
+                    except Exception:
+                        if self.testMode: traceback.print_exc()
+                    await asyncio.sleep(sleep_time)
 
     #收到信息时
     async def _receive_messages(self, callback: __module__):
