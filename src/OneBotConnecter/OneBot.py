@@ -1,7 +1,18 @@
-import asyncio, json, websockets, os
-from src.OneBot.OneBotMessageType import Message, ReplyMessage, AtMessage, MessageChain
+#import
+try:
+    from OneBotConnecter.MessageType import Message, ReplyMessage, AtMessage, MessageChain
+except:
+    print("File [OneBotMessageType.py] missing")
+    raise Exception()
 from typing import Literal
-import traceback
+import os
+moduleList = ["traceback", "asyncio", "json", "websockets"]
+for module in moduleList:
+    try:
+        exec(f"import {module}")
+    except:
+        os.system("pip install " + module)
+        exec(f"import {module}")
 
 #机器人接口连接
 class OneBot:
@@ -76,19 +87,8 @@ class OneBot:
         except websockets.exceptions.ConnectionClosed:
             print("与机器人连接已断开\n")
             self.bot = None
-        except: 
-            pass
-    #
-    async def _temp_receive_messages(self):
-        try:
-            message = await self.bot.recv()
-            message = json.loads(message)
-            return message
-        except websockets.exceptions.ConnectionClosed:
-            print("与机器人连接已断开\n")
-            self.bot = None
-        except: 
-            pass
+        except: pass
+    
     #为信息发送构造数据包
     def _createDataPack(self, action: str, params: dict):
         data = {
@@ -108,7 +108,7 @@ class OneBot:
             return message
         except: return None
     #调试模式开关
-    async def test(testMode: bool = False):
+    async def test(self, testMode: bool = False):
         self.testMode = testMode
     # =====------API------===== #
     # ------好友----- #
@@ -732,8 +732,7 @@ class OneBot:
     #
     #获取登录号信息
     async def get_login_info(self):
-        params = {}
-        callback = await self._sendToServer("get_login_info", params)
+        callback = await self._sendToServer("get_login_info", {})
         self.botAcc = callback["data"]["user_id"]
         self.nickname = callback["data"]["nickname"]
         self.botName.append(self.nickname)
