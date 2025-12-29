@@ -31,23 +31,18 @@ class OneBot:
     #构造体
     def __init__(self, uri: str, owner: list[str] = None, botName: list[str] = None, localtion: str = None, testMode = False):
         self._uri = uri
-        if owner != None:
-            print("[W]: Owner input is None")
-            self.owner = owner
-        if botName != None:
-            print("[W]: Bot Name input is None")
-            self.botName = botName
-        if localtion != None:
-            print("[W]: Main file location input is None")
-            self.localtion = localtion.replace("\\", "/")
+        if owner != None: self.owner = owner
+        else: print("[W]: Owner input is None")
+        if botName != None: self.botName = botName
+        else: print("[W]: Bot Name input is None")
+        if localtion != None: self.localtion = localtion.replace("\\", "/")
+        else: print("[W]: Main file location input is None")
         self.testMode = testMode
     #建立连接 (WS正向)
     async def run(self, on_message: __module__ = _on_message, sleep_time: int = 1):
         while self.bot == None:
-            try:
-                self.bot = await websockets.connect(self._uri)
-            except:
-                await asyncio.sleep(1)
+            try: self.bot = await websockets.connect(self._uri)
+            except: await asyncio.sleep(1)
         if self.bot != None:
             self.bot = await websockets.connect(self._uri)
             message = await self.bot.recv()
@@ -55,10 +50,8 @@ class OneBot:
             await self.get_login_info()
             print(f"机器人账号: {self.botAcc}")
             print(f"机器人名称: {self.botName}")
-            if self.owner != None:
-                print(f"机器人管理员: {self.owner}")
-            if self.localtion != None:
-                print(f"机器人根目录地址: {self.localtion}")
+            if self.owner != None: print(f"机器人管理员: {self.owner}")
+            if self.localtion != None: print(f"机器人根目录地址: {self.localtion}")
             print(f"开始监听机器人信息推送\n")
             while True:
                 if self.bot == None:
