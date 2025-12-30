@@ -16,7 +16,7 @@ class TextMessage(Message):
     text = ""
 
     def __init__(self, data: str):
-        if len(data) > 3420:
+        if len(data) > 10000:
             raise ValueError("内容过长")
         self.text = data
     
