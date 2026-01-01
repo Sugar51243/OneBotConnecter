@@ -131,6 +131,13 @@ class OneBot:
             await self.send_group_msg(group_id, message)
         elif group_id == None and user_id != None:
             await self.send_private_msg(user_id, message)
+        else: raise TypeError("Error input in send_msg function.")
+    async def send_poke(self, group_id: int = None, user_id: int = None):
+        if group_id != None and user_id != None:
+            await self.group_poke(group_id=group_id, user_id=user_id)
+        elif user_id != None:
+            await self.friend_poke(user_id=user_id)
+        else: raise TypeError("Error input in send_poke function.")
     #回复指定信息
     async def reply_to_message(self, getMessage, sendMessage):
         try:
