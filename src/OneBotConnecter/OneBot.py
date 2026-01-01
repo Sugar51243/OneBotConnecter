@@ -108,6 +108,166 @@ class OneBot:
     async def test(self, testMode: bool = False):
         self.testMode = testMode
     # =====------API------===== #
+    # ------消息----- #
+    #发送私聊消息
+    async def send_private_msg(self, user_id: int, message: Message):
+        params = {
+            "user_id": user_id,
+            "message": message.returnData()
+        }
+        callback = await self._sendToServer("send_private_msg", params)
+        return callback
+    #发送群聊消息
+    async def send_group_msg(self, group_id: int, message: Message):
+        params = {
+            "group_id": group_id,
+            "message": message.returnData()
+        }
+        callback = await self._sendToServer("send_group_msg", params)
+        return callback
+    #发送消息
+    async def send_msg(self, message: Message, group_id: int = None, user_id: int = None):
+        if group_id != None and user_id == None:
+            await self.send_group_msg(group_id, message)
+        elif group_id == None and user_id != None:
+            await self.send_private_msg(user_id, message)
+    #回复指定信息
+    async def reply_to_message(self, getMessage, sendMessage):
+        try:
+            group_id = getMessage["group_id"]
+            user_id = getMessage["user_id"]
+            message_id = getMessage["message_id"]
+            msg = MessageChain([ReplyMessage(message_id), AtMessage(user_id), " "])
+            msg.add(sendMessage)
+            callback = await self.send_group_msg(group_id, msg)
+        except:
+            user_id = getMessage["user_id"]
+            message_id = getMessage["message_id"]
+            msg = MessageChain([ReplyMessage(message_id), " "])
+            msg.add(sendMessage)
+            callback = await self.send_private_msg(user_id, msg)
+        return callback
+    #长连接接收消息
+    async def events(self):
+        params = {}
+        callback = await self._sendToServer("_events", params)
+        return callback
+    #转发单条好友消息
+    async def forward_friend_single_msg(self, message_id: int, user_id: int):
+        params = {
+            "message_id": message_id,
+            "user_id": user_id
+        }
+        callback = await self._sendToServer("forward_friend_single_msg", params)
+        return callback
+    #转发单条群消息
+    async def forward_group_single_msg(self, message_id: int, group_id: int):
+        params = {
+            "message_id": message_id,
+            "group_id": group_id
+        }
+        callback = await self._sendToServer("forward_group_single_msg", params)
+        return callback
+    #获取消息详情
+    async def get_msg(self, message_id: int):
+        params = {
+            "message_id": message_id
+        }
+        callback = await self._sendToServer("get_msg", params)
+        return callback
+    #撤回消息
+    async def delete_msg(self, message_id: int):
+        params = {
+            "message_id": message_id
+        }
+        callback = await self._sendToServer("delete_msg", params)
+        return callback
+    #获取消息文件详情
+    async def get_file(self, file: str):
+        params = {
+            "file": file
+        }
+        callback = await self._sendToServer("get_file", params)
+        return callback
+    #获取消息图片详情
+    async def get_image(self, file: str):
+        params = {
+            "file": file
+        }
+        callback = await self._sendToServer("get_image", params)
+        return callback
+    #获取消息语音详情
+    async def get_record(self, file: str, out_format: str = "mp3"):
+        params = {
+            "file": file,
+            "out_format": out_format
+        }
+        callback = await self._sendToServer("get_record", params)
+        return callback
+    #表情回应消息
+    async def set_msg_emoji_like(self, message_id: int, emoji_id: int):
+        params = {
+            "message_id": message_id,
+            "emoji_id": emoji_id
+        }
+        callback = await self._sendToServer("set_msg_emoji_like", params)
+        return callback
+    #取消消息表情回应
+    async def unset_msg_emoji_like(self, message_id: int, emoji_id: int):
+        params = {
+            "message_id": message_id,
+            "emoji_id": emoji_id
+        }
+        callback = await self._sendToServer("unset_msg_emoji_like", params)
+        return callback
+    #获取好友历史消息记录
+    async def get_friend_msg_history(self, user_id: int, message_seq: int = 0, count: int = 20):
+        params = {
+            "user_id": user_id,
+            "message_seq": message_seq,
+            "count": count
+        }
+        callback = await self._sendToServer("get_friend_msg_history", params)
+        return callback
+    #获取群历史消息
+    async def get_group_msg_history(self, group_id: int, message_seq: int = 0, count: int = 20):
+        params = {
+            "group_id": group_id,
+            "message_seq": message_seq,
+            "count": count
+        }
+        callback = await self._sendToServer("get_group_msg_history", params)
+        return callback
+    #获取转发消息详情
+    async def get_forward_msg(self, message_id: str):
+        params = {
+            "message_id": message_id
+        }
+        callback = await self._sendToServer("get_forward_msg", params)
+        return callback
+    #标记消息已读
+    async def mark_msg_as_read(self, message_id: int):
+        params = {
+            "message_id": message_id
+        }
+        callback = await self._sendToServer("mark_msg_as_read", params)
+        return callback
+    #语音消息转文字
+    async def voice_msg_to_text(self, message_id: int):
+        params = {
+            "message_id": message_id
+        }
+        callback = await self._sendToServer("voice_msg_to_text", params)
+        return callback
+    #发送群 Ai 语音
+    async def send_group_ai_record(self, character: str, group_id: int, text: str):
+        params = {
+            "character": character,
+            "group_id": group_id,
+            "text": text
+        }
+        callback = await self._sendToServer("send_group_ai_record", params)
+        return callback
     # ------好友----- #
     #点赞
     async def send_like(self, user_id: int, times=1):
@@ -440,160 +600,6 @@ class OneBot:
             "group_id": group_id
         }
         callback = await self._sendToServer("get_group_ignore_add_request", params)
-        return callback
-    # ------消息----- #
-    #发送私聊消息
-    async def send_private_msg(self, user_id: int, message: Message):
-        params = {
-            "user_id": user_id,
-            "message": message.returnData()
-        }
-        callback = await self._sendToServer("send_private_msg", params)
-        return callback
-    #发送群聊消息
-    async def send_group_msg(self, group_id: int, message: Message):
-        params = {
-            "group_id": group_id,
-            "message": message.returnData()
-        }
-        callback = await self._sendToServer("send_group_msg", params)
-        return callback
-    #长连接接收消息
-    async def events(self):
-        params = {}
-        callback = await self._sendToServer("_events", params)
-        return callback
-    #转发单条好友消息
-    async def forward_friend_single_msg(self, message_id: int, user_id: int):
-        params = {
-            "message_id": message_id,
-            "user_id": user_id
-        }
-        callback = await self._sendToServer("forward_friend_single_msg", params)
-        return callback
-    #转发单条群消息
-    async def forward_group_single_msg(self, message_id: int, group_id: int):
-        params = {
-            "message_id": message_id,
-            "group_id": group_id
-        }
-        callback = await self._sendToServer("forward_group_single_msg", params)
-        return callback
-    #获取消息详情
-    async def get_msg(self, message_id: int):
-        params = {
-            "message_id": message_id
-        }
-        callback = await self._sendToServer("get_msg", params)
-        return callback
-    #撤回消息
-    async def delete_msg(self, message_id: int):
-        params = {
-            "message_id": message_id
-        }
-        callback = await self._sendToServer("delete_msg", params)
-        return callback
-    #获取消息文件详情
-    async def get_file(self, file: str):
-        params = {
-            "file": file
-        }
-        callback = await self._sendToServer("get_file", params)
-        return callback
-    #获取消息图片详情
-    async def get_image(self, file: str):
-        params = {
-            "file": file
-        }
-        callback = await self._sendToServer("get_image", params)
-        return callback
-    #获取消息语音详情
-    async def get_record(self, file: str, out_format: str = "mp3"):
-        params = {
-            "file": file,
-            "out_format": out_format
-        }
-        callback = await self._sendToServer("get_record", params)
-        return callback
-    #表情回应消息
-    async def set_msg_emoji_like(self, message_id: int, emoji_id: int):
-        params = {
-            "message_id": message_id,
-            "emoji_id": emoji_id
-        }
-        callback = await self._sendToServer("set_msg_emoji_like", params)
-        return callback
-    #取消消息表情回应
-    async def unset_msg_emoji_like(self, message_id: int, emoji_id: int):
-        params = {
-            "message_id": message_id,
-            "emoji_id": emoji_id
-        }
-        callback = await self._sendToServer("unset_msg_emoji_like", params)
-        return callback
-    #获取好友历史消息记录
-    async def get_friend_msg_history(self, user_id: int, message_seq: int = 0, count: int = 20):
-        params = {
-            "user_id": user_id,
-            "message_seq": message_seq,
-            "count": count
-        }
-        callback = await self._sendToServer("get_friend_msg_history", params)
-        return callback
-    #获取群历史消息
-    async def get_group_msg_history(self, group_id: int, message_seq: int = 0, count: int = 20):
-        params = {
-            "group_id": group_id,
-            "message_seq": message_seq,
-            "count": count
-        }
-        callback = await self._sendToServer("get_group_msg_history", params)
-        return callback
-    #获取转发消息详情
-    async def get_forward_msg(self, message_id: str):
-        params = {
-            "message_id": message_id
-        }
-        callback = await self._sendToServer("get_forward_msg", params)
-        return callback
-    #标记消息已读
-    async def mark_msg_as_read(self, message_id: int):
-        params = {
-            "message_id": message_id
-        }
-        callback = await self._sendToServer("mark_msg_as_read", params)
-        return callback
-    #语音消息转文字
-    async def voice_msg_to_text(self, message_id: int):
-        params = {
-            "message_id": message_id
-        }
-        callback = await self._sendToServer("voice_msg_to_text", params)
-        return callback
-    #发送群 Ai 语音
-    async def send_group_ai_record(self, character: str, group_id: int, text: str):
-        params = {
-            "character": character,
-            "group_id": group_id,
-            "text": text
-        }
-        callback = await self._sendToServer("send_group_ai_record", params)
-        return callback
-    #回复指定信息
-    async def reply_to_message(self, getMessage, sendMessage):
-        try:
-            group_id = getMessage["group_id"]
-            user_id = getMessage["user_id"]
-            message_id = getMessage["message_id"]
-            msg = MessageChain([ReplyMessage(message_id), AtMessage(user_id), " "])
-            msg.add(sendMessage)
-            callback = await self.send_group_msg(group_id, msg)
-        except:
-            user_id = getMessage["user_id"]
-            message_id = getMessage["message_id"]
-            msg = MessageChain([ReplyMessage(message_id), " "])
-            msg.add(sendMessage)
-            callback = await self.send_private_msg(user_id, msg)
         return callback
     # ------文件----- #
     #上传群文件
