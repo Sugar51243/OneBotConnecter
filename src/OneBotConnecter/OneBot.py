@@ -28,6 +28,7 @@ class OneBot:
     nickname: str = []
     botAcc: int = None
     testMode = False #调试模式
+    message_list = [] #缓存信息
     #构造体
     def __init__(self, uri: str, owner: list[str] = None, botName: list[str] = None, localtion: str = None, testMode = False):
         self._uri = uri
@@ -57,6 +58,7 @@ class OneBot:
                 if self.bot == None:
                     try:
                         self.bot = await websockets.connect(self._uri)
+                        print("重连成功\n")
                     except:
                         print("连接失败，5秒后重试\n")
                         await asyncio.sleep(5)
@@ -64,8 +66,7 @@ class OneBot:
                     task = asyncio.create_task(self._receive_messages(on_message))
                     try:
                         result = task.result()
-                    except Exception:
-                        if self.testMode: traceback.print_exc()
+                    except Exception: pass
                     await asyncio.sleep(sleep_time)
 
     #收到信息时
@@ -75,12 +76,15 @@ class OneBot:
             message = json.loads(message)
             try:
                 if message["post_type"] != "meta_event" and self.bot != None:
-                    try:
-                        await callback(self, message)
-                    except Exception as e:
-                        traceback.print_exc()
+                    self.message_list.append(message)
             except:
                 print(f"{message}\n")
+            while len(self.message_list) > 0:
+                try:
+                    message = self.message_list.pop(0)
+                    await callback(self, message)
+                except Exception as e:
+                    traceback.print_exc()
         except websockets.exceptions.ConnectionClosed:
             print("与机器人连接已断开\n")
             self.bot = None
@@ -101,6 +105,13 @@ class OneBot:
         try:
             callback = await self.bot.recv()
             message = json.loads(callback)
+            loop = True
+            while loop:
+                try:
+                    status = message["status"] 
+                    loop = False
+                except: 
+                    self.message_list.append(message)
             if self.testMode: print(f"数据包返回: {message}")
             return message
         except: return None
