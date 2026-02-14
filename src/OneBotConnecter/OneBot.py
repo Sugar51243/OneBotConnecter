@@ -147,22 +147,19 @@ class OneBot:
                 #从接口收取信息
                 callback = await self.bot.recv()
                 message = json.loads(callback)
-                #正常返回的callback包体中有status字段
+                #识别是否为正常信息
                 try:
-                    status = message["status"] 
-                    loop = False
-                #如果没有，则识别是否为正常信息
-                except:
                     try:
                         if message["post_type"] != "meta_event" and self.bot != None:
                             self.message_list.append(message)
+                            if self.testMode: print(f"{message}\n")
                         elif self.testMode: print(f"{message}\n")
                     except: 
-                        #报错处理，这里可能是来自post_type的Key_Exception
-                        # 所以打印处理，方便进一步人工识别和修改
                         print(f"{message}\n")
                     #然后继续收取
                     await asyncio.sleep(1)
+                except:
+                    loop = False
             #识别完毕，返回
             if self.testMode: print(f"数据包返回: {message}\n")
             return message
