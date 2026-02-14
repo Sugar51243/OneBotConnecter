@@ -142,8 +142,7 @@ class OneBot:
         #收集处理结果
         try:
             #因为处理可能会有延迟，需要识别从接口收取的信息
-            loop = True
-            while loop:
+            while True:
                 #从接口收取信息
                 callback = await self.bot.recv()
                 message = json.loads(callback)
@@ -159,7 +158,8 @@ class OneBot:
                     #然后继续收取
                     await asyncio.sleep(1)
                 except:
-                    loop = False
+                    if self.testMode: print(message)
+                    break
             #识别完毕，返回
             if self.testMode: print(f"数据包返回: {message}\n")
             return message
