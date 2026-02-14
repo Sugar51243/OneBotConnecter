@@ -60,7 +60,12 @@ class OneBot:
             self.bot = await websockets.connect(self._uri)
             message = await self.bot.recv() #测试接口可用性
             print(f"\n地址{self._uri}连接已完成")
-            await self.get_login_info() #更新机器人本体信息
+            callback = await self.get_login_info() #更新机器人本体信息
+            if callback == None: 
+                print(f"\n地址{self._uri}连接中断")
+                print("正在尝试重连")
+                await self.run(on_message = on_message, sleep_time = sleep_time)
+                return
             print(f"机器人账号: {self.botAcc}")
             print(f"机器人名称: {self.botName}")
             if self.owner != None: print(f"机器人管理员: {self.owner}")
@@ -146,15 +151,15 @@ class OneBot:
                 #从接口收取信息
                 callback = await self.bot.recv()
                 message = json.loads(callback)
-                if self.testMode: print(f"{message}\n")
                 #识别是否为正常信息
                 try:
                     try:
                         if message["post_type"] != "meta_event" and self.bot != None:
                             self.message_list.append(message)
                     except: 
-                        if type(message["status"]) == str:
-                            break
+                        if message == {}: break
+                        elif type(message["status"]) == str: break
+                        elif self.testMode: print(f"{message}\n")
                     #然后继续收取
                     await asyncio.sleep(1)
                 except:
@@ -805,7 +810,9 @@ class OneBot:
     #获取登录号信息
     async def get_login_info(self):
         callback = await self._sendToServer("get_login_info", {})
-        self.botAcc = callback["data"]["user_id"]
-        self.nickname = callback["data"]["nickname"]
-        self.botName.append(self.nickname)
+        try:
+            self.botAcc = callback["data"]["user_id"]
+            self.nickname = callback["data"]["nickname"]
+            self.botName.append(self.nickname)
+        except: pass
         return callback
