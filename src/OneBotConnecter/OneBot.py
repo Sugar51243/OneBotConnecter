@@ -146,15 +146,15 @@ class OneBot:
                 #从接口收取信息
                 callback = await self.bot.recv()
                 message = json.loads(callback)
+                if self.testMode: print(f"{message}\n")
                 #识别是否为正常信息
                 try:
                     try:
                         if message["post_type"] != "meta_event" and self.bot != None:
                             self.message_list.append(message)
-                            if self.testMode: print(f"{message}\n")
-                        elif self.testMode: print(f"{message}\n")
                     except: 
-                        print(f"{message}\n")
+                        if type(message["status"]) == str:
+                            break
                     #然后继续收取
                     await asyncio.sleep(1)
                 except:
