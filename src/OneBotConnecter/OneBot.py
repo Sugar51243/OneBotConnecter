@@ -115,6 +115,7 @@ class OneBot:
             while len(self.message_list) > 0:
                 try:
                     message = self.message_list.pop(0)
+                    if self.testMode: print(f"{message}\n")
                     await callback(self, message)
                 except Exception as e:
                     traceback.print_exc()
@@ -162,8 +163,11 @@ class OneBot:
                     #其他信息 => 识别
                     except: 
                         if message == {}: break
-                        elif type(message["status"]) == str: break
-                        elif self.testMode: print(f"{message}\n")
+                        try:
+                            retcode = message["retcode"]
+                            break
+                        except: 
+                            if self.testMode: print(f"{message}\n")
                     #继续收取
                     await asyncio.sleep(1)
                 #非常规信息 => 强行返回
