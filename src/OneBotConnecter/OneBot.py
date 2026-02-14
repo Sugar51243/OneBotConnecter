@@ -62,7 +62,7 @@ class OneBot:
             print(f"\n地址{self._uri}连接已完成")
             callback = await self.get_login_info() #更新机器人本体信息
             if callback == None: 
-                print(f"\n地址{self._uri}连接中断")
+                print(f"地址{self._uri}连接中断")
                 print("正在尝试重连")
                 await self.run(on_message = on_message, sleep_time = sleep_time)
                 return
@@ -124,7 +124,9 @@ class OneBot:
         except websockets.exceptions.ConnectionClosed:
             print("与机器人连接已断开\n")
             self.bot = None
-        #其他奇怪报错(一般不应该触发才对)
+        #异步报错
+        except RuntimeError: pass
+        #其他奇怪报错
         except: 
             if self.testMode:
                 traceback.print_exc()
@@ -153,15 +155,18 @@ class OneBot:
                 message = json.loads(callback)
                 #识别是否为正常信息
                 try:
+                    #正常信息 => 缓存
                     try:
                         if message["post_type"] != "meta_event" and self.bot != None:
                             self.message_list.append(message)
+                    #其他信息 => 识别
                     except: 
                         if message == {}: break
                         elif type(message["status"]) == str: break
                         elif self.testMode: print(f"{message}\n")
-                    #然后继续收取
+                    #继续收取
                     await asyncio.sleep(1)
+                #非常规信息 => 强行返回
                 except:
                     if self.testMode: print(message)
                     break
