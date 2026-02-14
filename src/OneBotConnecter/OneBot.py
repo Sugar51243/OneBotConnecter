@@ -20,41 +20,55 @@ def _on_message(bot, message):
 
 #机器人接口连接
 class OneBot:
-    _uri: str = None #机器人地址
+    #连接相关
+    _uri: str = None #机器人接口地址
     bot = None #连接本体
-    owner: list[str] = None #机器人管理员
+    #机器人本体信息
     botName: list[str] = None #机器人名称
-    localtion: str = None #机器人地址
-    nickname: str = []
-    botAcc: int = None
+    localtion: str = None #机器人文件地址
+    nickname: str = [] #机器人账号名称
+    botAcc: int = None #机器人账号ID
+    #机器人管理信息
+    owner: list[str] = None #机器人管理员
+    #调试模式
     testMode = False #调试模式
-    message_list = [] #缓存信息
+    #信息缓存
+    message_list = [] #信息缓存
     #构造体
     def __init__(self, uri: str, owner: list[str] = None, botName: list[str] = None, localtion: str = None, testMode = False):
+        #接口地址
         self._uri = uri
+        #管理员
         if owner != None: self.owner = owner
         else: print("[W]: Owner input is None")
+        ##机器人名称
         if botName != None: self.botName = botName
         else: print("[W]: Bot Name input is None")
+        ##机器人文件地址
         if localtion != None: self.localtion = localtion.replace("\\", "/")
         else: print("[W]: Main file location input is None")
+        #调试模式
         self.testMode = testMode
-    #建立连接 (WS正向)
+    #建立连接 (WS正向) == #初次连接
     async def run(self, on_message: __module__ = _on_message, sleep_time: int = 1):
+        #直到连接成功为止，持续尝试连接
         while self.bot == None:
             try: self.bot = await websockets.connect(self._uri)
             except: await asyncio.sleep(1)
+        #更新连接状态
         if self.bot != None:
             self.bot = await websockets.connect(self._uri)
-            message = await self.bot.recv()
+            message = await self.bot.recv() #测试接口可用性
             print(f"\n地址{self._uri}连接已完成")
-            await self.get_login_info()
+            await self.get_login_info() #更新机器人本体信息
             print(f"机器人账号: {self.botAcc}")
             print(f"机器人名称: {self.botName}")
             if self.owner != None: print(f"机器人管理员: {self.owner}")
             if self.localtion != None: print(f"机器人根目录地址: {self.localtion}")
             print(f"开始监听机器人信息推送\n")
+            #持续从接口收取信息
             while True:
+                #连接失败 => 直到连接成功为止，持续尝试重连
                 if self.bot == None:
                     try:
                         self.bot = await websockets.connect(self._uri)
@@ -62,33 +76,54 @@ class OneBot:
                     except:
                         print("连接失败，5秒后重试\n")
                         await asyncio.sleep(5)
+                #连接正常
                 if self.bot != None:
+                    #从接口收取信息，并进行信息处理
                     task = asyncio.create_task(self._receive_messages(on_message))
                     try:
                         result = task.result()
+                    #由于信息处理涵数无返回值，这里固定报错
+                    #可以不作处理
                     except Exception: pass
                     await asyncio.sleep(sleep_time)
 
     #收到信息时
     async def _receive_messages(self, callback: __module__):
+        #连接正常
         try:
+            #从接口收取信息
             message = await self.bot.recv()
             message = json.loads(message)
+            #处理 => 缓存
             try:
+                #识别是否为心跳信息
                 if message["post_type"] != "meta_event" and self.bot != None:
-                    self.message_list.append(message)
+                    self.message_list.append(message) #放入缓存，排队处理
+                elif self.testMode: print(f"{message}\n") #调试模式下打印所有信息
             except:
+                #报错处理，这里可能是来自post_type的Key_Exception
+                # 所以打印处理，方便进一步人工识别和修改
                 print(f"{message}\n")
+            #处理 => 信息
+            if self.testMode: print(f"待处理信息列表数量为: {len(self.message_list)}\n")
+            #一口气清空缓存
             while len(self.message_list) > 0:
                 try:
                     message = self.message_list.pop(0)
                     await callback(self, message)
                 except Exception as e:
                     traceback.print_exc()
+                    print("")
+            if self.testMode: print(f"信息列表处理完毕\n")
+        #连接失败
         except websockets.exceptions.ConnectionClosed:
             print("与机器人连接已断开\n")
             self.bot = None
-        except: pass
+        #其他奇怪报错(一般不应该触发才对)
+        except: 
+            if self.testMode:
+                traceback.print_exc()
+                print("")
     
     #为信息发送构造数据包
     def _createDataPack(self, action: str, params: dict):
@@ -99,21 +134,39 @@ class OneBot:
         return json.dumps(data)
     #把数据包发送至机器人端口，并收集处理结果
     async def _sendToServer(self, action: str, params: dict):
+        #构造数据包
         datapack = self._createDataPack(action, params)
-        if self.testMode:print(f"数据包发送: {datapack}")
+        if self.testMode:print(f"数据包发送: {datapack}\n")
+        #发送
         await self.bot.send(datapack)
+        #收集处理结果
         try:
-            callback = await self.bot.recv()
-            message = json.loads(callback)
+            #因为处理可能会有延迟，需要识别从接口收取的信息
             loop = True
             while loop:
+                #从接口收取信息
+                callback = await self.bot.recv()
+                message = json.loads(callback)
+                #正常返回的callback包体中有status字段
                 try:
                     status = message["status"] 
                     loop = False
-                except: 
-                    self.message_list.append(message)
-            if self.testMode: print(f"数据包返回: {message}")
+                #如果没有，则识别是否为正常信息
+                except:
+                    try:
+                        if message["post_type"] != "meta_event" and self.bot != None:
+                            self.message_list.append(message)
+                        elif self.testMode: print(f"{message}\n")
+                    except: 
+                        #报错处理，这里可能是来自post_type的Key_Exception
+                        # 所以打印处理，方便进一步人工识别和修改
+                        print(f"{message}\n")
+                    #然后继续收取
+                    await asyncio.sleep(1)
+            #识别完毕，返回
+            if self.testMode: print(f"数据包返回: {message}\n")
             return message
+        #处理失败
         except: return None
     #调试模式开关
     async def test(self, testMode: bool = False):
@@ -143,6 +196,7 @@ class OneBot:
         elif group_id == None and user_id != None:
             await self.send_private_msg(user_id, message)
         else: raise TypeError("Error input in send_msg function.")
+    #发送戳一戳
     async def send_poke(self, group_id: int = None, user_id: int = None):
         if group_id != None and user_id != None:
             await self.group_poke(group_id=group_id, user_id=user_id)
