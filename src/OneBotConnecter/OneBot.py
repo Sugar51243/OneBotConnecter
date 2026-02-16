@@ -111,18 +111,18 @@ class OneBot:
                     #报错处理，这里可能是来自post_type的Key_Exception
                     # 所以打印处理，方便进一步人工识别和修改
                     print(f"{message}\n")
-            #处理 => 信息
-            if self.testMode: print(f"待处理信息列表数量为: {len(self.message_list)}\n")
-            #一口气清空缓存
-            while len(self.message_list) > 0:
-                try:
-                    message = self.message_list.pop(0)
-                    if self.testMode: print(f"{message}\n")
-                    await callback(self, message)
-                except Exception as e:
-                    traceback.print_exc()
-                    print("")
-            if self.testMode: print(f"信息列表处理完毕\n")
+                #处理 => 信息
+                if self.testMode: print(f"待处理信息列表数量为: {len(self.message_list)}\n")
+                #一口气清空缓存
+                while len(self.message_list) > 0:
+                    try:
+                        message = self.message_list.pop(0)
+                        if self.testMode: print(f"{message}\n")
+                        await callback(self, message)
+                    except Exception as e:
+                        traceback.print_exc()
+                        print("")
+                if self.testMode: print(f"信息列表处理完毕\n")
         #连接失败
         except websockets.exceptions.ConnectionClosed:
             print("与机器人连接已断开\n")
