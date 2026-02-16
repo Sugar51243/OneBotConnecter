@@ -160,19 +160,27 @@ class OneBot:
                     try:
                         if message["post_type"] != "meta_event" and self.bot != None:
                             self.message_list.append(message)
+                            if self.testMode: print("正在处理其他信息，缓存信息")
                     #其他信息 => 识别
                     except: 
-                        if message == {}: break
+                        if message == {}: 
+                            if self.testMode: print("空包识别")
+                            break
                         try:
+                            if self.testMode: print("retcode识别")
                             retcode = message["retcode"]
                             break
                         except: 
-                            if self.testMode: print(f"{message}\n")
+                            if self.testMode: 
+                                print("其他信息识别:")
+                                print(f"{message}\n")
                     #继续收取
                     await asyncio.sleep(1)
                 #非常规信息 => 强行返回
                 except:
-                    if self.testMode: print(message)
+                    if self.testMode: 
+                        print("非常规信息识别:")
+                        print(f"{message}\n")
                     break
             #识别完毕，返回
             if self.testMode: print(f"数据包返回: {message}\n")
