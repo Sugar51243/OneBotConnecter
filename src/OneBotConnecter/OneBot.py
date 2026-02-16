@@ -151,7 +151,7 @@ class OneBot:
         await self.bot.send(datapack)
         #收集处理结果
         message = None
-        get_message = False
+        self.get_message = False
         while True:
             #因为处理可能会有延迟，需要识别从接口收取的信息
             try:
@@ -178,8 +178,6 @@ class OneBot:
                             if self.testMode: 
                                 print("其他信息识别:")
                                 print(f"{message}\n")
-                    #继续收取
-                    await asyncio.sleep(1)
                 #非常规信息 => 强行返回
                 except:
                     if self.testMode: 
@@ -190,7 +188,9 @@ class OneBot:
             except RuntimeError: pass
             #处理失败
             except Exception as e: print(e)
-        get_message = True
+            #继续收取
+            await asyncio.sleep(1)
+        self.get_message = True
         #识别完毕，返回
         if self.testMode: print(f"数据包返回: {message}\n")
         return message
