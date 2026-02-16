@@ -34,6 +34,7 @@ class OneBot:
     testMode = False #调试模式
     #信息缓存
     message_list = [] #信息缓存
+    get_message = True
     #构造体
     def __init__(self, uri: str, owner: list[str] = None, botName: list[str] = None, localtion: str = None, testMode = False):
         #接口地址
@@ -97,18 +98,19 @@ class OneBot:
         #连接正常
         try:
             #从接口收取信息
-            message = await self.bot.recv()
-            message = json.loads(message)
-            #处理 => 缓存
-            try:
-                #识别是否为心跳信息
-                if message["post_type"] != "meta_event" and self.bot != None:
-                    self.message_list.append(message) #放入缓存，排队处理
-                elif self.testMode: print(f"{message}\n") #调试模式下打印所有信息
-            except:
-                #报错处理，这里可能是来自post_type的Key_Exception
-                # 所以打印处理，方便进一步人工识别和修改
-                print(f"{message}\n")
+            if self.get_message:
+                message = await self.bot.recv()
+                message = json.loads(message)
+                #处理 => 缓存
+                try:
+                    #识别是否为心跳信息
+                    if message["post_type"] != "meta_event" and self.bot != None:
+                        self.message_list.append(message) #放入缓存，排队处理
+                    elif self.testMode: print(f"{message}\n") #调试模式下打印所有信息
+                except:
+                    #报错处理，这里可能是来自post_type的Key_Exception
+                    # 所以打印处理，方便进一步人工识别和修改
+                    print(f"{message}\n")
             #处理 => 信息
             if self.testMode: print(f"待处理信息列表数量为: {len(self.message_list)}\n")
             #一口气清空缓存
@@ -148,9 +150,11 @@ class OneBot:
         #发送
         await self.bot.send(datapack)
         #收集处理结果
-        try:
+        message = None
+        get_message = False
+        while True:
             #因为处理可能会有延迟，需要识别从接口收取的信息
-            while True:
+            try:
                 #从接口收取信息
                 callback = await self.bot.recv()
                 message = json.loads(callback)
@@ -182,11 +186,14 @@ class OneBot:
                         print("非常规信息识别:")
                         print(f"{message}\n")
                     break
-            #识别完毕，返回
-            if self.testMode: print(f"数据包返回: {message}\n")
-            return message
-        #处理失败
-        except: return None
+            #异步报错
+            except RuntimeError: pass
+            #处理失败
+            except Exception as e: print(e)
+        get_message = True
+        #识别完毕，返回
+        if self.testMode: print(f"数据包返回: {message}\n")
+        return message
     #调试模式开关
     async def test(self, testMode: bool = False):
         self.testMode = testMode
