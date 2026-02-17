@@ -80,8 +80,6 @@ class OneBot:
             if self.owner != None: print(f"机器人管理员: {self.owner}")
             if self.localtion != None: print(f"机器人根目录地址: {self.localtion}")
             print(f"开始监听机器人信息推送\n")
-            #持续从接口收取信息
-            counter = 0
             while True:
                 #连接失败 => 直到连接成功为止，持续尝试重连
                 if self.bot == None:
@@ -93,7 +91,7 @@ class OneBot:
                         await asyncio.sleep(5)
                 #连接正常
                 if self.bot != None:
-                    print(f"下一轮信息收集[{counter}]", needPrint=self.testMode)
+                    print(f"下一轮信息收集", needPrint=self.testMode)
                     #从接口收取信息，并进行信息处理
                     task = asyncio.create_task(self._receive_messages(on_message))
                     try:
@@ -102,7 +100,7 @@ class OneBot:
                     #可以不作处理
                     except Exception: pass
                     await asyncio.sleep(sleep_time)
-                    print(f"此轮结束[{counter}]", needPrint=self.testMode)
+                    print(f"此轮结束\n", needPrint=self.testMode)
                     counter+=1
 
     #收到信息时
@@ -113,7 +111,7 @@ class OneBot:
             if self.get_message:
                 message = await self.bot.recv()
                 message = json.loads(message)
-                print(f"获取信息:\n{message}", needPrint=self.testMode)
+                print(f"获取信息: {message}", needPrint=self.testMode)
                 #处理 => 缓存
                 try:
                     #识别是否为心跳信息
@@ -132,7 +130,7 @@ class OneBot:
                 while len(self.message_list) > 0:
                     try:
                         message = self.message_list.pop(0)
-                        print(f"正在处理: \n{message}", needPrint=self.testMode)
+                        print(f"正在处理: {message}", needPrint=self.testMode)
                         await callback(self, message)
                     except Exception as e:
                         tb = e.__traceback__
@@ -178,7 +176,7 @@ class OneBot:
                 #从接口收取信息
                 callback = await self.bot.recv()
                 message = json.loads(callback)
-                print(f"数据包发送后收取: \n{message}", needPrint=self.testMode)
+                print(f"数据包发送后收取: {message}", needPrint=self.testMode)
                 #识别是否为正常信息
                 try:
                     #正常信息 => 缓存

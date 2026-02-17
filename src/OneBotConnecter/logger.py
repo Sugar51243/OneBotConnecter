@@ -20,5 +20,6 @@ def print(data: str = "", needPrint = True):
     #文件写入
     if not os.path.isdir("log"): os.makedirs("log")
     file = open(f'log/OneBotConnecter_{current_time}.log', 'a', encoding="utf-8")
-    file.write(f"{data}\n")
+    now = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+    file.write(f"[{now}]: {data}\n")
     file.close()
