@@ -167,9 +167,10 @@ class OneBot:
         print(f"数据包发送: {datapack}", needPrint=self.testMode)
         #收集处理结果
         message = None
-        print(f"中断信息收集", needPrint=self.testMode)
-        self.get_message = False
         while True:
+            if self.get_message: 
+                print(f"中断信息收集", needPrint=self.testMode)
+                self.get_message = False
             #因为处理可能会有延迟，需要识别从接口收取的信息
             try:
                 #从接口收取信息
