@@ -60,7 +60,7 @@ class OneBot:
         if self.bot != None:
             self.bot = await websockets.connect(self._uri)
             message = await self.bot.recv() #测试接口可用性
-            print(f"\n地址{self._uri}连接已完成")
+            print(f"地址{self._uri}连接已完成")
             callback = await self.get_login_info() #更新机器人本体信息
             if callback == None: 
                 print(f"地址{self._uri}连接中断")
@@ -84,6 +84,7 @@ class OneBot:
                         await asyncio.sleep(5)
                 #连接正常
                 if self.bot != None:
+                    if self.testMode: print("Next Loop")
                     #从接口收取信息，并进行信息处理
                     task = asyncio.create_task(self._receive_messages(on_message))
                     try:
@@ -123,6 +124,7 @@ class OneBot:
                         traceback.print_exc()
                         print("")
                 if self.testMode: print(f"信息列表处理完毕\n")
+                if not self.get_message: self.get_message = True
         #连接失败
         except websockets.exceptions.ConnectionClosed:
             print("与机器人连接已断开\n")
