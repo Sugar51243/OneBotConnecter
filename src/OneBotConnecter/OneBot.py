@@ -91,7 +91,6 @@ class OneBot:
                         await asyncio.sleep(5)
                 #连接正常
                 if self.bot != None:
-                    print(f"下一轮信息收集", needPrint=self.testMode)
                     #从接口收取信息，并进行信息处理
                     task = asyncio.create_task(self._receive_messages(on_message))
                     try:
@@ -100,7 +99,6 @@ class OneBot:
                     #可以不作处理
                     except Exception: pass
                     await asyncio.sleep(sleep_time)
-                    print(f"此轮结束\n", needPrint=self.testMode)
 
     #收到信息时
     async def _receive_messages(self, callback: __module__):
@@ -108,6 +106,7 @@ class OneBot:
         try:
             #从接口收取信息
             if self.get_message:
+                print(f"下一轮信息收集", needPrint=self.testMode)
                 message = await self.bot.recv()
                 message = json.loads(message)
                 print(f"获取信息: {message}", needPrint=self.testMode)
@@ -139,6 +138,7 @@ class OneBot:
                 if not self.get_message: 
                     self.get_message = True
                     print(f"当前信息收集已中断，已强制恢复", needPrint=self.testMode)
+                print(f"此轮结束\n", needPrint=self.testMode)
         #连接失败
         except websockets.exceptions.ConnectionClosed:
             print("与机器人连接已断开")
