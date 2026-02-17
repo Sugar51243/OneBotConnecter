@@ -101,7 +101,6 @@ class OneBot:
                     except Exception: pass
                     await asyncio.sleep(sleep_time)
                     print(f"此轮结束\n", needPrint=self.testMode)
-                    counter+=1
 
     #收到信息时
     async def _receive_messages(self, callback: __module__):
