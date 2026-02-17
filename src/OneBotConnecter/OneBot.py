@@ -1,9 +1,14 @@
 #import
 try:
+    from OneBotConnecter.logger import print
+except:
+    print("File [logger.py] missing")
+    raise Exception("File [logger.py] missing")
+try:
     from OneBotConnecter.MessageType import Message, ReplyMessage, AtMessage, MessageChain
 except:
     print("File [OneBotMessageType.py] missing")
-    raise Exception()
+    raise Exception("File [OneBotMessageType.py] missing")
 from typing import Literal
 import os
 moduleList = ["traceback", "asyncio", "json", "websockets"]
