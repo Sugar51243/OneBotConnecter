@@ -8,7 +8,7 @@ loger_time = time.strftime("%Y-%m-%d", time.localtime()) #每日轮换文件
 
 
 #日志写入
-def print(data: str = ""):
+def print(data: str = "", needPrint = True):
     #每日轮换文件
     today = time.strftime("%Y-%m-%d", time.localtime()) 
     global current_time
@@ -16,7 +16,7 @@ def print(data: str = ""):
     if today != loger_time: 
         loger_time = time.strftime("%Y-%m-%d", time.localtime()) 
     #后台打印
-    __builtin__.print(data)
+    if needPrint: __builtin__.print(data)
     #文件写入
     if not os.path.isdir("log"): os.makedirs("log")
     file = open(f'log/OneBotConnecter_{current_time}.log', 'a', encoding="utf-8")

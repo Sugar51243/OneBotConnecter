@@ -55,8 +55,11 @@ class OneBot:
         else: print("[W]: Main file location input is None")
         #调试模式
         self.testMode = testMode
+        print("初始化完成", needPrint=False)
+    
     #建立连接 (WS正向) == #初次连接
     async def run(self, on_message: __module__ = _on_message, sleep_time: int = 1):
+        print("正在建立初次连接...", needPrint=False)
         #直到连接成功为止，持续尝试连接
         while self.bot == None:
             try: self.bot = await websockets.connect(self._uri)
@@ -78,6 +81,7 @@ class OneBot:
             if self.localtion != None: print(f"机器人根目录地址: {self.localtion}")
             print(f"开始监听机器人信息推送\n")
             #持续从接口收取信息
+            counter = 0
             while True:
                 #连接失败 => 直到连接成功为止，持续尝试重连
                 if self.bot == None:
@@ -89,7 +93,7 @@ class OneBot:
                         await asyncio.sleep(5)
                 #连接正常
                 if self.bot != None:
-                    if self.testMode: print("Next Loop")
+                    print(f"下一轮信息收集[{counter}]", needPrint=self.testMode)
                     #从接口收取信息，并进行信息处理
                     task = asyncio.create_task(self._receive_messages(on_message))
                     try:
@@ -98,6 +102,8 @@ class OneBot:
                     #可以不作处理
                     except Exception: pass
                     await asyncio.sleep(sleep_time)
+                    print(f"此轮结束[{counter}]", needPrint=self.testMode)
+                    counter+=1
 
     #收到信息时
     async def _receive_messages(self, callback: __module__):
@@ -107,40 +113,46 @@ class OneBot:
             if self.get_message:
                 message = await self.bot.recv()
                 message = json.loads(message)
+                print(f"获取信息:\n{message}", needPrint=self.testMode)
                 #处理 => 缓存
                 try:
                     #识别是否为心跳信息
                     if message["post_type"] != "meta_event" and self.bot != None:
                         self.message_list.append(message) #放入缓存，排队处理
-                    elif self.testMode: print(f"{message}\n") #调试模式下打印所有信息
-                except:
+                        print(f"非心跳信息，已放入缓存", needPrint=self.testMode)
+                except Exception as e:
                     #报错处理，这里可能是来自post_type的Key_Exception
                     # 所以打印处理，方便进一步人工识别和修改
-                    print(f"{message}\n")
+                    tb = e.__traceback__
+                    formatted_tb = ''.join(traceback.format_tb(tb))
+                    print(f"信息报错:\n{formatted_tb}", needPrint=self.testMode)
                 #处理 => 信息
-                if self.testMode: print(f"待处理信息列表数量为: {len(self.message_list)}\n")
+                print(f"待处理信息列表数量为: {len(self.message_list)}", needPrint=self.testMode)
                 #一口气清空缓存
                 while len(self.message_list) > 0:
                     try:
                         message = self.message_list.pop(0)
-                        if self.testMode: print(f"{message}\n")
+                        print(f"正在处理: \n{message}", needPrint=self.testMode)
                         await callback(self, message)
                     except Exception as e:
-                        traceback.print_exc()
-                        print("")
-                if self.testMode: print(f"信息列表处理完毕\n")
-                if not self.get_message: self.get_message = True
+                        tb = e.__traceback__
+                        formatted_tb = ''.join(traceback.format_tb(tb))
+                        print(f"处理信息报错:\n{formatted_tb}", needPrint=self.testMode)
+                print(f"信息列表处理完毕", needPrint=self.testMode)
+                if not self.get_message: 
+                    self.get_message = True
+                    print(f"当前信息收集已中断，已强制恢复", needPrint=self.testMode)
         #连接失败
         except websockets.exceptions.ConnectionClosed:
-            print("与机器人连接已断开\n")
+            print("与机器人连接已断开")
             self.bot = None
         #异步报错
         except RuntimeError: pass
         #其他奇怪报错
         except: 
-            if self.testMode:
-                traceback.print_exc()
-                print("")
+            tb = e.__traceback__
+            formatted_tb = ''.join(traceback.format_tb(tb))
+            print(f"连接报错:\n{formatted_tb}", needPrint=self.testMode)
     
     #为信息发送构造数据包
     def _createDataPack(self, action: str, params: dict):
@@ -153,11 +165,12 @@ class OneBot:
     async def _sendToServer(self, action: str, params: dict):
         #构造数据包
         datapack = self._createDataPack(action, params)
-        if self.testMode:print(f"数据包发送: {datapack}\n")
         #发送
         await self.bot.send(datapack)
+        print(f"数据包发送: {datapack}", needPrint=self.testMode)
         #收集处理结果
         message = None
+        print(f"中断信息收集", needPrint=self.testMode)
         self.get_message = False
         while True:
             #因为处理可能会有延迟，需要识别从接口收取的信息
@@ -165,41 +178,46 @@ class OneBot:
                 #从接口收取信息
                 callback = await self.bot.recv()
                 message = json.loads(callback)
+                print(f"数据包发送后收取: \n{message}", needPrint=self.testMode)
                 #识别是否为正常信息
                 try:
                     #正常信息 => 缓存
                     try:
                         if message["post_type"] != "meta_event" and self.bot != None:
                             self.message_list.append(message)
-                            if self.testMode: print("正在处理其他信息，缓存信息")
+                            print("正在处理其他信息，缓存信息", needPrint=self.testMode)
                     #其他信息 => 识别
                     except: 
                         if message == {}: 
-                            if self.testMode: print("空包识别")
+                            print("空包识别", needPrint=self.testMode)
                             break
                         try:
-                            if self.testMode: print("retcode识别")
+                            print("retcode识别", needPrint=self.testMode)
                             retcode = message["retcode"]
                             break
                         except: 
-                            if self.testMode: 
-                                print("其他信息识别:")
-                                print(f"{message}\n")
+                            print(f"其他信息识别", needPrint=self.testMode)
                 #非常规信息 => 强行返回
                 except:
-                    if self.testMode: 
-                        print("非常规信息识别:")
-                        print(f"{message}\n")
+                    tb = e.__traceback__
+                    formatted_tb = ''.join(traceback.format_tb(tb))
+                    print(f"报错识别: \n{formatted_tb}", needPrint=self.testMode)
                     break
             #异步报错
             except RuntimeError: pass
             #处理失败
-            except Exception as e: print(e)
+            except Exception as e: 
+                tb = e.__traceback__
+                formatted_tb = ''.join(traceback.format_tb(tb))
+                print(f"处理失败: \n{formatted_tb}", needPrint=self.testMode)
+                break
             #继续收取
+            print(f"未识别返回值，继续收取", needPrint=self.testMode)
             await asyncio.sleep(1)
         self.get_message = True
+        print(f"恢复信息收集", needPrint=self.testMode)
         #识别完毕，返回
-        if self.testMode: print(f"数据包返回: {message}\n")
+        print(f"数据包返回: {message}", needPrint=self.testMode)
         return message
     #调试模式开关
     async def test(self, testMode: bool = False):
