@@ -15,6 +15,7 @@ def print(data: str = "", needPrint = True):
     global loger_time
     if today != loger_time: 
         loger_time = time.strftime("%Y-%m-%d", time.localtime()) 
+        current_time = time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime())
     #后台打印
     if needPrint: __builtin__.print(data)
     #文件写入
