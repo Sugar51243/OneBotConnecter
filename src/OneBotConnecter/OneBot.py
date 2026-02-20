@@ -101,7 +101,7 @@ class OneBot:
                     await asyncio.sleep(sleep_time)
 
     #建立连接 (WS正向) == #初次连接
-    async def non_async_run(self, on_message: __module__ = _on_message, sleep_time: int = 1):
+    async def non_async_run(self, on_message: __module__ = _on_message):
         print("正在建立初次连接...", needPrint=False)
         #直到连接成功为止，持续尝试连接
         while self.bot == None:
@@ -142,7 +142,6 @@ class OneBot:
                         tb = e.__traceback__
                         formatted_tb = ''.join(traceback.format_tb(tb))
                         print(f"接口处理报错:\n{formatted_tb}", needPrint=self.testMode)
-                    await asyncio.sleep(sleep_time)
 
     #收到信息时
     async def _receive_messages(self, callback: __module__):
