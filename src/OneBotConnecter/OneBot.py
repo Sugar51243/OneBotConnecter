@@ -100,6 +100,50 @@ class OneBot:
                     except Exception: pass
                     await asyncio.sleep(sleep_time)
 
+    #建立连接 (WS正向) == #初次连接
+    async def non_async_run(self, on_message: __module__ = _on_message, sleep_time: int = 1):
+        print("正在建立初次连接...", needPrint=False)
+        #直到连接成功为止，持续尝试连接
+        while self.bot == None:
+            try: self.bot = await websockets.connect(self._uri)
+            except: await asyncio.sleep(1)
+        #更新连接状态
+        if self.bot != None:
+            self.bot = await websockets.connect(self._uri)
+            message = await self.bot.recv() #测试接口可用性
+            print(f"地址{self._uri}连接已完成")
+            callback = await self.get_login_info() #更新机器人本体信息
+            if callback == None: 
+                print(f"地址{self._uri}连接中断")
+                print("正在尝试重连")
+                await self.run(on_message = on_message, sleep_time = sleep_time)
+                return
+            print(f"机器人账号: {self.botAcc}")
+            print(f"机器人名称: {self.botName}")
+            if self.owner != None: print(f"机器人管理员: {self.owner}")
+            if self.localtion != None: print(f"机器人根目录地址: {self.localtion}")
+            print(f"开始监听机器人信息推送\n")
+            while True:
+                #连接失败 => 直到连接成功为止，持续尝试重连
+                if self.bot == None:
+                    try:
+                        self.bot = await websockets.connect(self._uri)
+                        print("重连成功\n")
+                    except:
+                        print("连接失败，5秒后重试\n")
+                        await asyncio.sleep(5)
+                #连接正常
+                if self.bot != None:
+                    #从接口收取信息，并进行信息处理
+                    try:
+                        await self._receive_messages(on_message)
+                    #报错处理
+                    except Exception as e:
+                        tb = e.__traceback__
+                        formatted_tb = ''.join(traceback.format_tb(tb))
+                        print(f"接口处理报错:\n{formatted_tb}", needPrint=self.testMode)
+                    await asyncio.sleep(sleep_time)
+
     #收到信息时
     async def _receive_messages(self, callback: __module__):
         #连接正常
