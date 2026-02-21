@@ -304,12 +304,16 @@ class OneBot:
             msg = MessageChain([ReplyMessage(message_id), AtMessage(user_id), " "])
             msg.add(sendMessage)
             callback = await self.send_group_msg(group_id, msg)
-        except:
+        except KeyError:
             user_id = getMessage["user_id"]
             message_id = getMessage["message_id"]
             msg = MessageChain([ReplyMessage(message_id), " "])
             msg.add(sendMessage)
             callback = await self.send_private_msg(user_id, msg)
+        except Exception as e:
+            tb = e.__traceback__
+            formatted_tb = ''.join(traceback.format_tb(tb))
+            print(f"回复信息时报错: \n{formatted_tb}", needPrint=self.testMode)
         return callback
     #长连接接收消息
     async def events(self):
