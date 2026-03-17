@@ -116,7 +116,7 @@ class OneBot:
             if callback == None: 
                 print(f"地址{self._uri}连接中断")
                 print("正在尝试重连")
-                await self.run(on_message = on_message, sleep_time = sleep_time)
+                await self.non_async_run(on_message = on_message)
                 return
             print(f"机器人账号: {self.botAcc}")
             print(f"机器人名称: {self.botName}")
