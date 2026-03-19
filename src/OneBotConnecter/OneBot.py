@@ -288,7 +288,8 @@ class OneBot:
         elif group_id == None and user_id != None:
             await self.send_private_msg(user_id, message)
         elif group_id != None and user_id != None:
-            send_message = MessageChain([AtMessage(user_id), " "]).add(message)
+            send_message = MessageChain([AtMessage(user_id), " "])
+            send_message.add(message)
             await self.send_group_msg(group_id, send_message)
         else: raise TypeError("Error input in send_msg function.")
     #发送戳一戳
