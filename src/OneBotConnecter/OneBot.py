@@ -272,13 +272,13 @@ class OneBot:
                 "group_id": group_id,
                 "message": data.to_dict()
             }
-            callback = await self._sendToServer("send_group_msg", params)
+            callback = await self._sendToServer("send_group_forward_msg", params)
         elif not data.isGroup and user_id != None:
             params = {
                 "user_id": user_id,
                 "message": data.to_dict()
             }
-            callback = await self._sendToServer("send_private_msg", params)
+            callback = await self._sendToServer("send_private_forward_msg", params)
         else: raise TypeError("Error input in send_forward_msg function.")
         return callback
 
