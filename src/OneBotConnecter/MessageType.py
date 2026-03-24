@@ -265,16 +265,14 @@ class PrivateCardMessage(Message):
 class ForwardMessage(Message):
 
     data: list[Message]
-    user_id: str
-    nickname: str
 
     def __init__(self, data: list[Message] | Message, user_id: str, nickname: str = "某人"):
         if not isinstance(data, list):
             data = [data]
         self.data = [{
             "type": "node",
-            "user_id": self.user_id,
-            "nickname": self.nickname,
+            "user_id": user_id,
+            "nickname": nickname,
             "data": {
                 "content": [msg.to_dict() for msg in data]
             }
