@@ -265,40 +265,26 @@ class PrivateCardMessage(Message):
 class ForwardMessage(Message):
 
     data: list[Message]
+    user_id: str
+    nickname: str
 
     def __init__(self, data: list[Message] | Message, user_id: str, nickname: str = "某人"):
         if not isinstance(data, list):
             data = [data]
-        self.data = [{
-            "type": "node",
-            "user_id": user_id,
-            "nickname": nickname,
-            "data": {
-                "content": [msg.to_dict() for msg in data]
-            }
-        }]
+        self.data = data
         self.user_id = user_id
         self.nickname = nickname
 
     def to_dict(self):
         msg = {
-            "type": "forward",
-            "messages": self.data
-        }
-        return msg
-    
-    def addNode(self,  data: list[Message] | Message, user_id: str, nickname: str = "某人"):
-        if not isinstance(data, list):
-            data = [data]
-        node = {
             "type": "node",
-            "user_id": user_id,
-            "nickname": nickname,
+            "user_id": self.user_id,
+            "nickname": self.nickname,
             "data": {
-                "content": [msg.to_dict() for msg in data]
+                "content": [msg.to_dict() for msg in self.data]
             }
         }
-        self.data.append(node)
+        return msg
 
     def returnData(self):
         return [self.to_dict()]
@@ -345,7 +331,7 @@ class MessageChain(Message):
         self.data.extend(message.returnData())
     
     def to_dict(self):
-        return {}
+        return self.data
 
     def returnData(self):
         return self.data
