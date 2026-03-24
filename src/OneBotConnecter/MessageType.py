@@ -262,19 +262,27 @@ class PrivateCardMessage(Message):
         return [self.to_dict()]
     
 # 合并转发信息
-class PrivateCardMessage(Message):
+class ForwardMessage(Message):
 
-    data: Message
+    data: list[Message]
+    user_id: str
 
-    def __init__(self, data: Message):
+    def __init__(self, data: list[Message] | Message):
+        if not isinstance(data, list):
+            data = [data]
         self.data = data
-    
+
     def to_dict(self):
         msg = {
-            "type": "json",
-            "data": {
-                "content": self.data.returnData()
-            }
+            "type": "forward",
+            "messages": [
+                {
+                    "type": "node",
+                    "data": {
+                        "content": [msg.to_dict() for msg in self.data]
+                    }
+                }
+            ]
         }
         return msg
 
