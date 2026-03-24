@@ -5,7 +5,7 @@ except:
     print("File [logger.py] missing")
     raise Exception("File [logger.py] missing")
 try:
-    from OneBotConnecter.MessageType import Message, ReplyMessage, AtMessage, MessageChain
+    from OneBotConnecter.MessageType import Message, ReplyMessage, AtMessage, MessageChain, ForwardMessage
 except:
     print("File [OneBotMessageType.py] missing")
     raise Exception("File [OneBotMessageType.py] missing")
@@ -265,6 +265,23 @@ class OneBot:
         self.testMode = testMode
     # =====------API------===== #
     # ------消息----- #
+    #
+    async def send_forward_msg(self, data: ForwardMessage, user_id: int = None, group_id: int = None):
+        if data.isGroup and group_id != None:
+            params = {
+                "group_id": group_id,
+                "message": data.to_dict()
+            }
+            callback = await self._sendToServer("send_group_msg", params)
+        elif not data.isGroup and user_id != None:
+            params = {
+                "user_id": user_id,
+                "message": data.to_dict()
+            }
+            callback = await self._sendToServer("send_private_msg", params)
+        else: raise TypeError("Error input in send_forward_msg function.")
+        return callback
+
     #发送私聊消息
     async def send_private_msg(self, user_id: int, message: Message):
         params = {

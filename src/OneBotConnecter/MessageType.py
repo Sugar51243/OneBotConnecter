@@ -267,23 +267,33 @@ class ForwardMessage(Message):
     data: list[Message]
     user_id: str
     nickname: str
+    isGroup: bool
 
-    def __init__(self, data: list[Message] | Message, user_id: str, nickname: str = "某人"):
+    def __init__(self, data: list[Message] | Message, user_id: str = None, nickname: str = "某人", isGroup = True):
         if not isinstance(data, list):
             data = [data]
         self.data = data
         self.user_id = user_id
         self.nickname = nickname
+        self.isGroup = isGroup
 
     def to_dict(self):
-        msg = {
-            "type": "node",
-            "user_id": self.user_id,
-            "nickname": self.nickname,
-            "data": {
-                "content": [msg.to_dict() for msg in self.data]
+        if self.isGroup:
+            msg = {
+                "type": "node",
+                "data": {
+                    "uin": self.user_id,
+                    "name": self.nickname,
+                    "content": [msg.to_dict() for msg in self.data]
+                }
             }
-        }
+        else:
+            msg = {
+                "type": "node",
+                "data": {
+                    "content": [msg.to_dict() for msg in self.data]
+                }
+            }
         return msg
 
     def returnData(self):
