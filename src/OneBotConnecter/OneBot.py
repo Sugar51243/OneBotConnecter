@@ -155,8 +155,8 @@ class OneBot:
                 print(f"获取信息: {message}", needPrint=self.testMode)
                 #处理 => 缓存
                 try:
-                    #识别是否为心跳信息
-                    if message["post_type"] != "meta_event" and self.bot != None:
+                    #识别是否为心跳信息及空包
+                    if message.get("post_type", None) != "meta_event" and self.bot != None and message != {}:
                         self.message_list.append(message) #放入缓存，排队处理
                         print(f"非心跳信息，已放入缓存", needPrint=self.testMode)
                 except Exception as e:
@@ -168,11 +168,13 @@ class OneBot:
                 #处理 => 信息
                 print(f"待处理信息列表数量为: {len(self.message_list)}", needPrint=self.testMode)
                 #一口气清空缓存
-                while len(self.message_list) > 0:
+                temp = self.message_list.copy()
+                for message in temp:
                     try:
-                        message = self.message_list.pop(0)
+                        if message.get("retcode", None) != None: continue #跳过带有retcode的信息
                         print(f"正在处理: {message}", needPrint=self.testMode)
                         await callback(self, message)
+                        self.message_list.remove(message)
                     except Exception as e:
                         tb = e.__traceback__
                         formatted_tb = ''.join(traceback.format_tb(tb))
@@ -201,6 +203,7 @@ class OneBot:
             "params": params
         }
         return json.dumps(data)
+    
     #把数据包发送至机器人端口，并收集处理结果
     async def _sendToServer(self, action: str, params: dict):
         #构造数据包
@@ -211,6 +214,7 @@ class OneBot:
         #收集处理结果
         message = None
         while True:
+            #中断正常信息收集
             if self.get_message: 
                 print(f"中断信息收集", needPrint=self.testMode)
                 self.get_message = False
@@ -219,31 +223,18 @@ class OneBot:
                 #从接口收取信息
                 callback = await self.bot.recv()
                 message = json.loads(callback)
+                #识别心跳和空包
                 print(f"数据包发送后收取: {message}", needPrint=self.testMode)
-                #识别是否为正常信息
-                try:
-                    #正常信息 => 缓存
-                    try:
-                        if message["post_type"] != "meta_event" and self.bot != None:
-                            self.message_list.append(message)
-                            print("正在处理其他信息，缓存信息", needPrint=self.testMode)
-                    #其他信息 => 识别
-                    except: 
-                        if message == {}: 
-                            print("空包识别", needPrint=self.testMode)
-                            break
-                        try:
-                            print("retcode识别", needPrint=self.testMode)
-                            retcode = message["retcode"]
-                            break
-                        except: 
-                            print(f"其他信息识别", needPrint=self.testMode)
-                #非常规信息 => 强行返回
-                except:
-                    tb = e.__traceback__
-                    formatted_tb = ''.join(traceback.format_tb(tb))
-                    print(f"报错识别: \n{formatted_tb}", needPrint=self.testMode)
-                    break
+                if message.get("post_type", None) != "meta_event" and self.bot != None and message != {}:
+                    self.message_list.append(message)
+                    print("缓存信息", needPrint=self.testMode)
+                #识别带有rercode的信息
+                for message in self.message_list:
+                    if message.get("retcode", None) != None: 
+                        print("retcode识别", needPrint=self.testMode)
+                        retcode_message = message
+                        self.message_list.remove(message)
+                        break
             #异步报错
             except RuntimeError: pass
             #处理失败
@@ -258,8 +249,9 @@ class OneBot:
         self.get_message = True
         print(f"恢复信息收集", needPrint=self.testMode)
         #识别完毕，返回
-        print(f"数据包返回: {message}", needPrint=self.testMode)
-        return message
+        print(f"数据包返回: {retcode_message}", needPrint=self.testMode)
+        return retcode_message
+    
     #调试模式开关
     async def test(self, testMode: bool = False):
         self.testMode = testMode
