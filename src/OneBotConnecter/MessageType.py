@@ -30,7 +30,7 @@ class TextMessage(Message):
         return msg
 
     def returnData(self):
-        return [self.to_dict()]
+        return [self]
     
 # 回复信息
 class ReplyMessage(Message):
@@ -50,7 +50,7 @@ class ReplyMessage(Message):
         return msg
 
     def returnData(self):
-        return [self.to_dict()]
+        return [self]
     
 # 图片信息
 class ImageMessage(Message):
@@ -70,7 +70,7 @@ class ImageMessage(Message):
         return msg
 
     def returnData(self):
-        return [self.to_dict()]
+        return [self]
     
 # 表情信息
 class EmojiMessage(Message):
@@ -90,7 +90,7 @@ class EmojiMessage(Message):
         return msg
 
     def returnData(self):
-        return [self.to_dict()]
+        return [self]
     
 # 语音信息
 class RecordMessage(Message):
@@ -110,7 +110,7 @@ class RecordMessage(Message):
         return msg
 
     def returnData(self):
-        return [self.to_dict()]
+        return [self]
     
 # 视频信息
 class VideoMessage(Message):
@@ -130,7 +130,7 @@ class VideoMessage(Message):
         return msg
 
     def returnData(self):
-        return [self.to_dict()]
+        return [self]
     
 # 超级表情: 骰子信息
 class DiceMessage(Message):
@@ -152,7 +152,7 @@ class DiceMessage(Message):
         return msg
 
     def returnData(self):
-        return [self.to_dict()]
+        return [self]
     
 # 超级表情: 猜拳信息
 class RPSMessage(Message):
@@ -167,7 +167,7 @@ class RPSMessage(Message):
         return msg
 
     def returnData(self):
-        return [self.to_dict()]
+        return [self]
     
 # QQ音乐卡片信息
 class QQMusicMessage(Message):
@@ -188,7 +188,7 @@ class QQMusicMessage(Message):
         return msg
 
     def returnData(self):
-        return [self.to_dict()]
+        return [self]
     
 # 网易云音乐卡片信息
 class Music163Message(Message):
@@ -209,7 +209,7 @@ class Music163Message(Message):
         return msg
 
     def returnData(self):
-        return [self.to_dict()]
+        return [self]
     
 # 自定义音乐卡片信息
 class CustomMusicMessage(Message):
@@ -239,7 +239,7 @@ class CustomMusicMessage(Message):
         return msg
 
     def returnData(self):
-        return [self.to_dict()]
+        return [self]
     
 # 卡片信息
 class PrivateCardMessage(Message):
@@ -259,7 +259,7 @@ class PrivateCardMessage(Message):
         return msg
 
     def returnData(self):
-        return [self.to_dict()]
+        return [self]
     
 # 合并转发信息
 class ForwardMessage(Message):
@@ -270,7 +270,9 @@ class ForwardMessage(Message):
     isGroup: bool
 
     def __init__(self, data: list[Message] | Message, user_id: str = None, nickname: str = "某人", isGroup = True):
-        if not isinstance(data, list):
+        if isinstance(data, MessageChain):
+            data = data.returnData()
+        elif not isinstance(data, list):
             data = [data]
         self.data = data
         self.user_id = user_id
@@ -294,10 +296,10 @@ class ForwardMessage(Message):
                     "content": [msg.to_dict() for msg in self.data]
                 }
             }
-        return msg
+        return [msg]
 
     def returnData(self):
-        return [self.to_dict()]
+        return [self]
     
 # @信息
 class AtMessage(Message):
@@ -319,19 +321,21 @@ class AtMessage(Message):
         return msg
 
     def returnData(self):
-        return [self.to_dict()]
+        return [self]
     
 # 信息链
 class MessageChain(Message):
     
-    data: list[dict]
+    data: list[Message]
 
     def __init__(self, data: list[Message|str] = []):
+        if isinstance(data, str):
+            self.data = [TextMessage(data)]
+            return
         temp = []
         for msg in data:
             if type(msg) == str:
                 msg = TextMessage(msg)
-            msg = msg.to_dict()
             temp.append(msg)
         self.data = temp
 
@@ -341,7 +345,7 @@ class MessageChain(Message):
         self.data.extend(message.returnData())
     
     def to_dict(self):
-        return self.data
+        return [msg.to_dict() for msg in self.data]
 
     def returnData(self):
         return self.data

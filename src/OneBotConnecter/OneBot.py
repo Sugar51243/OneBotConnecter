@@ -279,18 +279,18 @@ class OneBot:
     
     # =====------API------===== #
     # ------消息----- #
-    #聊天记录(开发中)
+    #聊天记录
     async def send_forward_msg(self, data: ForwardMessage, user_id: int = None, group_id: int = None):
-        if data.isGroup and group_id != None:
+        if group_id != None:
             params = {
                 "group_id": group_id,
-                "message": data.returnData()
+                "message": data.to_dict()
             }
             callback = await self._sendToServer("send_group_forward_msg", params)
-        elif not data.isGroup and user_id != None:
+        elif user_id != None:
             params = {
                 "user_id": user_id,
-                "message": data.returnData()
+                "message": data.to_dict()
             }
             callback = await self._sendToServer("send_private_forward_msg", params)
         else: raise TypeError("Error input in send_forward_msg function.")
@@ -300,7 +300,7 @@ class OneBot:
     async def send_private_msg(self, user_id: int, message: Message):
         params = {
             "user_id": user_id,
-            "message": message.returnData()
+            "message": message.to_dict()
         }
         callback = await self._sendToServer("send_private_msg", params)
         return callback
@@ -309,7 +309,7 @@ class OneBot:
     async def send_group_msg(self, group_id: int, message: Message):
         params = {
             "group_id": group_id,
-            "message": message.returnData()
+            "message": message.to_dict()
         }
         callback = await self._sendToServer("send_group_msg", params)
         return callback
