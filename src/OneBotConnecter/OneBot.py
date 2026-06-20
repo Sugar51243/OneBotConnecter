@@ -10,7 +10,7 @@ except:
     print("File [OneBotMessageType.py] missing")
     raise Exception("File [OneBotMessageType.py] missing")
 from typing import Literal
-import os
+import os, threading
 moduleList = ["traceback", "asyncio", "json", "websockets"]
 for module in moduleList:
     try:
@@ -158,6 +158,7 @@ class OneBot:
 
     #收到信息时
     async def _receive_messages(self, callback: __module__):
+        if not self.main_running: return
         #连接正常
         try:
             #从接口收取信息
@@ -234,10 +235,10 @@ class OneBot:
         print(f"数据包发送: {datapack}", needPrint=self.testMode)
         #因为处理可能会有延迟，需要识别从接口收取的信息
         #识别
-        return await self.get_feedback_from_message_list()
+        return await self._get_feedback_from_message_list()
     
     #从机器人端口收集处理结果
-    async def get_feedback_from_message_list(self):
+    async def _get_feedback_from_message_list(self):
         #超时缓存
         times = 0
         max_limit = 60
@@ -381,10 +382,22 @@ class OneBot:
     
     #获取消息详情
     async def get_msg(self, message_id: int):
+        temp = []
         params = {
             "message_id": message_id
         }
         callback = await self._sendToServer("get_msg", params)
+        time = 0
+        while str(callback.get("data",{}).get("message_id", None)) != str(message_id):
+            print(f"回复获取错误", needPrint=self.testMode)
+            temp.append(callback)
+            callback = await self._get_feedback_from_message_list()
+            time+=1
+            if time>10: break
+        if str(callback.get("data",{}).get("message_id", None)) != str(message_id): 
+            temp.append(callback)
+            callback = None
+        self.message_list.extend(temp)
         return callback
     
     #撤回消息

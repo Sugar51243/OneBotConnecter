@@ -260,16 +260,16 @@ class PrivateCardMessage(Message):
 
     def returnData(self):
         return [self]
-    
-# 合并转发信息
-class ForwardMessage(Message):
+
+
+class Nodes:
 
     data: list[Message]
     user_id: str
     nickname: str
     isGroup: bool
 
-    def __init__(self, data: list[Message] | Message, user_id: str = None, nickname: str = "某人", isGroup = True):
+    def __init__(self, data: list[Message] | Message, user_id: str = None, nickname: str = None, isGroup = True):
         if isinstance(data, MessageChain):
             data = data.returnData()
         elif not isinstance(data, list):
@@ -278,25 +278,70 @@ class ForwardMessage(Message):
         self.user_id = user_id
         self.nickname = nickname
         self.isGroup = isGroup
-
-    def to_dict(self):
+    
+    def _to_node(self, content):
         if self.isGroup:
             msg = {
                 "type": "node",
                 "data": {
                     "uin": self.user_id,
                     "name": self.nickname,
-                    "content": [msg.to_dict() for msg in self.data]
+                    "content": content
                 }
             }
         else:
             msg = {
                 "type": "node",
                 "data": {
-                    "content": [msg.to_dict() for msg in self.data]
+                    "content": content
                 }
             }
-        return [msg]
+        return msg
+
+    def to_dict(self):
+        return_data = []
+        temp = []
+        for msg in self.data:
+            if isinstance(msg, ImageMessage):
+                if temp: return_data.append(self._to_node(temp))
+                temp = []
+                return_data.append(self._to_node([msg.to_dict()]))
+                continue
+            temp.append(msg.to_dict())
+        if len(temp)>0:
+            return_data.append(self._to_node(temp))
+        print(return_data)
+        return return_data
+
+    def returnData(self):
+        return [self]
+
+# 合并转发信息
+class ForwardMessage(Message):
+
+    notes: list[Nodes]
+
+    def __init__(self, data: list[Message] | list[Nodes] | Message, user_id: str = None, nickname: str = None, isGroup = True):
+        if isinstance(data, list):
+            if isinstance(data[0], Nodes):
+                self.notes = data
+                return
+        note = Nodes(data = data, user_id = user_id, nickname = nickname, isGroup = isGroup)
+        self.notes= note.returnData()
+
+    def add_notes(self, data: list[Message] | list[Nodes] | Message, user_id: str = None, nickname: str = None, isGroup = True):
+        if isinstance(data, list):
+            if isinstance(data[0], Nodes):
+                self.notes.extend(data)
+                return
+        note = Nodes(data = data, user_id = user_id, nickname = nickname, isGroup = isGroup)
+        self.notes.extend(note)
+    
+    def to_dict(self):
+        return_data = []
+        for n in self.notes:
+            return_data.extend(n.to_dict())
+        return return_data
 
     def returnData(self):
         return [self]
