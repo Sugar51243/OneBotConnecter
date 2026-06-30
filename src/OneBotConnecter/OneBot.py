@@ -13,7 +13,7 @@ try:
     import asyncio
 except: pass
 from typing import Literal
-import os, threading
+import os, threading, time, random
 moduleList = ["traceback", "asyncio", "json", "websockets"]
 for module in moduleList:
     try:
@@ -46,6 +46,8 @@ class OneBot:
     breaked_times = 0
     #
     loading_completed = False
+    random_sample = random.sample(range(0,1000), 20)
+    in_using = []
 
     #构造体
     def __init__(self, uri: str, owner: list[str] = None, botName: list[str] = None, localtion: str = None, testMode = False):
@@ -114,6 +116,9 @@ class OneBot:
                             pass
                         #识别是否为返回信息
                         elif message.get("retcode", None) != None:
+                            if message.get("echo", None) not in self.in_using:
+                                print(f"过期或无效回复，已废弃", needPrint=self.testMode)
+                                continue
                             self.retcode_list.append(message) #放入缓存，排队处理
                             print(f"retcode识别，已放入缓存", needPrint=self.testMode)
                         #识别正常信息
@@ -163,32 +168,42 @@ class OneBot:
     
     #为信息发送构造数据包
     def _createDataPack(self, action: str, params: dict):
+        current_time = time.strftime("%Y-%m-%d_%H_%M_%S", time.localtime())
+        echo = f"{current_time}_{action}_{self.random_sample[random.randint(0, len(self.random_sample))]}"
+        while echo in self.in_using:
+            echo = f"{current_time}_{action}_{self.random_sample[random.randint(0, len(self.random_sample))]}"
+        self.in_using.append(echo)
         data = {
             "action": action,
-            "params": params
+            "params": params,
+            "echo": echo
         }
         return json.dumps(data)
     
     #把数据包发送至机器人端口，并收集处理结果
     async def _sendToServer(self, action: str, params: dict):
-        times = 0
-        max_limit = 60
         #构造数据包
         datapack = self._createDataPack(action, params)
-        #发送
+        print(f"正在处理: {datapack}", needPrint=self.testMode)
         await self.bot.send(datapack)
         print(f"数据包发送: {datapack}", needPrint=self.testMode)
         #因为处理可能会有延迟，需要识别从接口收取的信息
         #识别
-        return await self._get_feedback_from_message_list()
+        callback = await self._get_feedback_from_message_list(json.loads(datapack).get("echo", None))
+        return callback
     
-    async def _get_feedback_from_message_list(self):
+    async def _get_feedback_from_message_list(self, echo: str):
         while True:
             if not self.retcode_list:
                 await asyncio.sleep(1)
-            else:
-                break
-        return self.retcode_list.pop(0)
+                continue
+            for result in self.retcode_list:
+                result_echo = str(result.get("echo", None))
+                if  result_echo == echo:
+                    self.retcode_list.remove(result)
+                    self.in_using.remove(echo)
+                    return result
+            await asyncio.sleep(1)
 
     #调试模式开关
     def test(self, testMode: bool = False):
@@ -298,22 +313,10 @@ class OneBot:
     
     #获取消息详情
     async def get_msg(self, message_id: int):
-        temp = []
         params = {
             "message_id": message_id
         }
         callback = await self._sendToServer("get_msg", params)
-        time = 0
-        while str(callback.get("data",{}).get("message_id", None)) != str(message_id):
-            print(f"回复获取错误", needPrint=self.testMode)
-            temp.append(callback)
-            callback = await self._get_feedback_from_message_list()
-            time+=1
-            if time>10: break
-        if str(callback.get("data",{}).get("message_id", None)) != str(message_id): 
-            temp.append(callback)
-            callback = None
-        self.retcode_list.extend(temp)
         return callback
     
     #撤回消息
@@ -952,20 +955,20 @@ class OneBot:
         try:
             self.botAcc = callback["data"]["user_id"]
             self.nickname = callback["data"]["nickname"]
-            if not callback["data"]["nickname"] in self.nickname:
-                self.botName.append(self.nickname)
+            self.botName.append(self.nickname)
         except: pass
         return callback
 
     async def _get_login_info_before_start(self):
         #构造数据包
         datapack = self._createDataPack("get_login_info", {})
+        echo = json.loads(datapack).get("echo", None)
         #发送
         await self.bot.send(datapack)
         while True:
             message = await self.bot.recv()
             message = json.loads(message)
-            if message.get("retcode", None) != None:
+            if message.get("echo", None) == echo:
                 try:
                     self.botAcc = message["data"]["user_id"]
                     self.nickname = message["data"]["nickname"]

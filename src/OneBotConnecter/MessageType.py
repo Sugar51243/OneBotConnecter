@@ -310,7 +310,6 @@ class Nodes:
             temp.append(msg.to_dict())
         if len(temp)>0:
             return_data.append(self._to_node(temp))
-        print(return_data)
         return return_data
 
     def returnData(self):
@@ -329,13 +328,23 @@ class ForwardMessage(Message):
         note = Nodes(data = data, user_id = user_id, nickname = nickname, isGroup = isGroup)
         self.notes= note.returnData()
 
-    def add_notes(self, data: list[Message] | list[Nodes] | Message, user_id: str = None, nickname: str = None, isGroup = True):
+    def add_notes(self, data: list[Message] | list[Nodes] | Message | Nodes, user_id: str = None, nickname: str = None, isGroup = True):
         if isinstance(data, list):
             if isinstance(data[0], Nodes):
                 self.notes.extend(data)
                 return
+            for msg in data:
+                if isinstance(data[0], ForwardMessage):
+                    self.notes.extend(data[0].notes)
+            return
+        if isinstance(data, Nodes):
+            self.notes.extend([data])
+            return
+        elif isinstance(data, ForwardMessage):
+            self.notes.extend(data.notes)
+            return
         note = Nodes(data = data, user_id = user_id, nickname = nickname, isGroup = isGroup)
-        self.notes.extend(note)
+        self.notes.extend([note])
     
     def to_dict(self):
         return_data = []
@@ -374,9 +383,6 @@ class MessageChain(Message):
     data: list[Message]
 
     def __init__(self, data: list[Message|str] = []):
-        if isinstance(data, str):
-            self.data = [TextMessage(data)]
-            return
         temp = []
         for msg in data:
             if type(msg) == str:
