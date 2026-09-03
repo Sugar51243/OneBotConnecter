@@ -45,7 +45,7 @@ class websocket_connecter:
 
     def send_msg_to_server(self, msg):
         try:
-            self.websocket.send(msg)
+            self.websocket.send(json.dumps(msg))
             return True
         except Exception as e:
             error(e)

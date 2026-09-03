@@ -29,7 +29,6 @@ class OneBot:
     def run(self):
         self.threading_list.append(self.interface.get_message_forever())
         self.threading_list.append(self.handler.handle_messgae_forever())
-        self.acc = self.handler.handler.get_bot_acc()
         while self.check_threadings() > 0:
             try:
                 time.sleep(1)

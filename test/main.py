@@ -8,13 +8,15 @@
 
 
 #==此脚本为OneBotConnecter的基础演示例，具体使用方法请参考readme文件==#
-
-#导入必要的库
+from OneBotConnecter.Event.Message_Event import Message_Event
 from OneBotConnecter.OneBot import OneBot
 
 #收到信息时运行的脚本
-def onMessage(bot, message):
-    print(message)
+def onMessage(bot, message: Message_Event):
+    if message.raw_message == "test":
+        message.reply_message("hello")
+        message.reply_poke()
+        message.reply_face(1)
 
 #主函数
 if __name__ == "__main__":

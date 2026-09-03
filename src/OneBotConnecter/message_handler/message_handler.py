@@ -17,7 +17,7 @@ class message_handler:
         log("信息处理器正在初始化")
         self.inface = inface
         self.adapter = adapter
-        self.handler = message_inface(inface)
+        self.handler = message_inface(inface, adapter)
         self.bot = bot
         self.callback_function = call_function
         log("信息处理器初始化完成")
@@ -40,7 +40,7 @@ class message_handler:
 
     def _run_callback_function(self, raw_message):
         def call_function():
-            message = self.adapter.interface_message_to_local_message(raw_message)
+            message = self.adapter.interface_message_to_local_message(message=raw_message, handler=self.handler)
             try:
                 self.callback_function(bot=self.handler, message=message)
             except Exception as e:

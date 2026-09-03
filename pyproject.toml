@@ -18,6 +18,13 @@ classifiers = [
 license = {file = "LICENSE"}
 
 
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["OneBotConnecter*"]
+
 [project.urls]
 Homepage = "https://github.com/Sugar51243/OneBotConnecter"
 Issues = "https://github.com/Sugar51243/OneBotConnecter/issues"
