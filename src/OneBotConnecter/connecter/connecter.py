@@ -3,6 +3,17 @@ from OneBotConnecter.loger.log_info import log, error
 from threading import Lock, Thread
 import time, uuid
 
+class response_item:
+
+    raw_data: dict
+
+    def __init__(self, data: dict):
+        for k, v in data.items():
+            if isinstance(k, (list, tuple)):
+                setattr(self, k, [response_item(x) if isinstance(x, dict) else x for x in v])
+            else:
+                setattr(self, k, response_item(v) if isinstance(v, dict) else v)
+        self.raw_data = data
 
 class connecter:
 
@@ -92,6 +103,7 @@ class connecter:
             try:
                 response = self._wait_for_response(echo=echo)
                 log(f"接口回复: {response}")
+                response = response_item(response)
                 return response
             except Exception as e:
                 error(e)

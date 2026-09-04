@@ -1,6 +1,6 @@
 from OneBotConnecter.connecter.connecter import connecter
 from OneBotConnecter.adapters.message_interpreter import message_interpreter
-from OneBotConnecter.message_handler.message_inface import message_inface
+from OneBotConnecter.message_handler.message_interface import message_interface
 from OneBotConnecter.loger.log_info import log, error
 from threading import Thread
 import time
@@ -10,14 +10,14 @@ class message_handler:
     inface: connecter
     adapter: message_interpreter
     callback_function: __module__
-    handler: message_inface
+    handler: message_interface
     keep_running = True
 
     def __init__(self, inface: connecter, adapter: message_interpreter, call_function: __module__, bot):
         log("信息处理器正在初始化")
         self.inface = inface
         self.adapter = adapter
-        self.handler = message_inface(inface, adapter)
+        self.handler = message_interface(inface, adapter)
         self.bot = bot
         self.callback_function = call_function
         log("信息处理器初始化完成")

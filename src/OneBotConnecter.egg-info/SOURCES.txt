@@ -18,7 +18,7 @@ src/OneBotConnecter/loger/__init__.py
 src/OneBotConnecter/loger/log_info.py
 src/OneBotConnecter/message_handler/__init__.py
 src/OneBotConnecter/message_handler/message_handler.py
-src/OneBotConnecter/message_handler/message_inface.py
+src/OneBotConnecter/message_handler/message_interface.py
 src/OneBotConnecter/types/__init__.py
 src/OneBotConnecter/types/message.py
 src/OneBotConnecter/types/chain/__init__.py

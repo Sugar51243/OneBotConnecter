@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from OneBotConnecter.adapters.message_interpreter import message_interpreter
 
 
-class message_inface:
+class message_interface:
 
     inface: connecter
     adapter: message_interpreter

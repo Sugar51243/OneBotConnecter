@@ -7,7 +7,7 @@ from OneBotConnecter.types.message import Message
 from OneBotConnecter.types import AtMessage, ReplyMessage, MessageChain
 
 if TYPE_CHECKING:
-    from OneBotConnecter.message_handler.message_inface import message_inface
+    from OneBotConnecter.message_handler.message_interface import message_interface
 
 class item:
 
@@ -20,11 +20,11 @@ class item:
 
 class Message_Event:
 
-    handler: message_inface
+    handler: message_interface
     raw_data: dict
     event_type: str
 
-    def __init__(self, message: dict, handler: message_inface):
+    def __init__(self, message: dict, handler: message_interface):
         for k, v in message.items():
             if isinstance(k, (list, tuple)):
                 setattr(self, k, [item(x) if isinstance(x, dict) else x for x in v])
