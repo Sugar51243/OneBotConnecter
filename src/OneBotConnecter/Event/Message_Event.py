@@ -13,10 +13,9 @@ class item:
 
     def __init__(self, data: dict):
         for k, v in data.items():
-            if isinstance(k, (list, tuple)):
-                setattr(self, k, [item(x) if isinstance(x, dict) else x for x in v])
-            else:
-                setattr(self, k, item(v) if isinstance(v, dict) else v)
+            if isinstance(v, list): setattr(self, k, read_list(v))
+            elif isinstance(v, dict): setattr(self, k, item(v))
+            else: setattr(self, k, v)
 
 class Message_Event:
 
@@ -26,10 +25,9 @@ class Message_Event:
 
     def __init__(self, message: dict, handler: message_interface):
         for k, v in message.items():
-            if isinstance(k, (list, tuple)):
-                setattr(self, k, [item(x) if isinstance(x, dict) else x for x in v])
-            else:
-                setattr(self, k, item(v) if isinstance(v, dict) else v)
+            if isinstance(v, list): setattr(self, k, read_list(v))
+            elif isinstance(v, dict): setattr(self, k, item(v))
+            else: setattr(self, k, v)
         self.raw_data = message
         self.handler = handler
         self.indetify_message_type()
@@ -101,3 +99,11 @@ class Message_Event:
                 return None
             return message
         return None
+
+def read_list(items: list):
+    temp = []
+    for i in items:
+        if isinstance(i, list): temp.append(read_list(items=i))
+        elif isinstance(i, dict): temp.append(item(data=i))
+        else: temp.append(i)
+    return temp
