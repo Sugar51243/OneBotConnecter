@@ -23,7 +23,7 @@ class OneBot:
         self.url = url
         self.interface = connecter(url)
         self.adapter = message_interpreter()
-        self.handler = message_handler(self.interface, self.adapter, call_function, self)
+        self.handler = message_handler(self, self.interface, self.adapter, call_function)
         self.owner = owner
         print("接口已就绪")
 

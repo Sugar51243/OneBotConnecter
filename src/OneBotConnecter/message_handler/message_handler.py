@@ -13,11 +13,11 @@ class message_handler:
     handler: message_interface
     keep_running = True
 
-    def __init__(self, inface: connecter, adapter: message_interpreter, call_function: __module__, bot):
+    def __init__(self, bot, inface: connecter, adapter: message_interpreter, call_function: __module__):
         log("信息处理器正在初始化")
         self.inface = inface
         self.adapter = adapter
-        self.handler = message_interface(inface, adapter)
+        self.handler = message_interface(inface, adapter, bot=bot)
         self.bot = bot
         self.callback_function = call_function
         log("信息处理器初始化完成")

@@ -17,9 +17,10 @@ class message_interface:
     inface: connecter
     adapter: message_interpreter
 
-    def __init__(self, inface, adapter):
+    def __init__(self, inface, adapter, bot):
         self.inface = inface
         self.adapter = adapter
+        self.bot = bot
 
     def send_msg(self, message, user_id=None, group_id=None):
         if group_id is not None:

@@ -9,16 +9,14 @@
 
 #==此脚本为OneBotConnecter的基础演示例，具体使用方法请参考readme文件==#
 from OneBotConnecter.Event.Message_Event import Message_Event
+from OneBotConnecter.message_handler import message_interface
 from OneBotConnecter.OneBot import OneBot
-from OneBotConnecter.types import DiceMessage, NodeMessage
 
 #收到信息时运行的脚本
-def onMessage(bot, message: Message_Event):
+def onMessage(bot: message_interface, message: Message_Event):
     try:
         if message.raw_message == "test":
             message.reply_message("hello")
-            message.reply_message(message)
-            message.reply_message(NodeMessage(content=[message]))
     except:
         print(message.raw_data)
 
