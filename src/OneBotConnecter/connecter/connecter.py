@@ -104,6 +104,8 @@ class connecter:
                 response = self._wait_for_response(echo=echo)
                 log(f"接口回复: {response}")
                 response = response_item(response)
+                if response.retcode != 0 or response.status == "failed":
+                    error(f"操作失败，原因: {response.message}")
                 return response
             except Exception as e:
                 error(e)
