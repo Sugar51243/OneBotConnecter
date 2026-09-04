@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from OneBotConnecter.types.message import Message
-from OneBotConnecter.types import AtMessage, ReplyMessage, MessageChain
+from OneBotConnecter.types import AtMessage, ReplyMessage, MessageChain, ForwardChain, NodeMessage
 
 if TYPE_CHECKING:
     from OneBotConnecter.message_handler.message_interface import message_interface
@@ -65,7 +65,16 @@ class Message_Event:
             reply_message.add(ReplyMessage(message_id))
         if user_id is not None and self.raw_data.get("message_type") == "group":
             reply_message.add(AtMessage(str(user_id)))
-        reply_message.add(message)
+        if isinstance(message, Message_Event):
+            message = message.to_send_message()
+        if isinstance(message, NodeMessage):
+            message = ForwardChain(message=message)
+        if isinstance(message, ForwardChain):
+            return self.handler.send_forward_msg(message=message, user_id=user_id, group_id=group_id)
+        try:
+            reply_message.add(message)
+        except TypeError as e:
+            reply_message = message
         return self.handler.send_msg(message=reply_message, user_id=user_id, group_id=group_id)
 
     def reply_poke(self):
@@ -84,5 +93,11 @@ class Message_Event:
                 message = self.handler.adapter.message_class(message)
                 if message:
                     messages.append(message)
-            return messages
-        return {}
+            if len(messages) > 1:
+                message = MessageChain(message=messages)
+            elif len(messages) == 1:
+                message = messages[0]
+            else:
+                return None
+            return message
+        return None

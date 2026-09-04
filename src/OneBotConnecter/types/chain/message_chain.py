@@ -1,5 +1,4 @@
 
-
 from OneBotConnecter.types.messages.text_message import TextMessage
 from OneBotConnecter.types.message import Message
 from OneBotConnecter.loger.log_info import error
@@ -24,7 +23,10 @@ class MessageChain(Message):
         return self
 
     def _non_message_to_message(self, message):
+        from OneBotConnecter.Event.Message_Event import Message_Event
         temp = []
+        if isinstance(message, Message_Event):
+            message = message.to_send_message()
         if isinstance(message, str):
             temp.append(TextMessage(message))
         elif isinstance(message, list):

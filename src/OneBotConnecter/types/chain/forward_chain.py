@@ -14,7 +14,7 @@ class ForwardChain(Message):
         self.message = []
         self.add(message=message)
         self.source = source
-        if len(news)<1 or len(news)>4:
+        if (len(news)<1 or len(news)>4) and news!=[]:
             error(f"预览文本数量({len(news)})不符合需求")
             news = []
         self.news = []
@@ -37,7 +37,10 @@ class ForwardChain(Message):
         return self
 
     def _non_message_to_message(self, message):
+        from OneBotConnecter.Event.Message_Event import Message_Event
         temp = []
+        if isinstance(message, Message_Event):
+            message = message.to_send_message()
         if isinstance(message, str):
             message = TextMessage(message)
             nodes = NodeMessage(content=[message])
